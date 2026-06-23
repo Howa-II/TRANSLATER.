@@ -127,16 +127,16 @@
     }
     .lang-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(5, 1fr); /* Configuration pour 5 langues par ligne */
+      gap: 10px; /* Plus d'espace car il y a moins d'éléments par ligne */
     }
     .lang-btn {
-      padding: 10px 4px;
+      padding: 12px 4px; /* Un peu plus grand pour un meilleur rendu visuel */
       border-radius: 10px;
       border: 1.5px solid #2a2a35;
       background: #1e1e27;
       cursor: pointer;
-      font-size: 1.4rem;
+      font-size: 1.5rem; /* Drapeaux légèrement plus grands et lisibles */
       text-align: center;
       transition: all 0.12s;
       line-height: 1;
@@ -147,26 +147,11 @@
       border-color: #60a5fa;
       background: rgba(96,165,250,0.12);
     }
-    .lang-btn[title]:hover::after {
-      content: attr(title);
-      position: absolute;
-      bottom: calc(100% + 6px);
-      left: 50%;
-      transform: translateX(-50%);
-      background: #2a2a35;
-      color: #e8e8f0;
-      font-size: 0.72rem;
-      padding: 4px 8px;
-      border-radius: 6px;
-      white-space: nowrap;
-      pointer-events: none;
-      z-index: 10;
-      font-family: 'Inter', 'Segoe UI', sans-serif;
-    }
+
     #selected-lang-label {
       font-size: 0.8rem;
       color: #60a5fa;
-      margin-top: 10px;
+      margin-top: 14px;
       min-height: 1.2em;
     }
 
