@@ -239,7 +239,7 @@
 
   <div id="key-banner">
     <label for="api-key">Gemini API Key</label>
-    <input type="password" id="api-key" placeholder="Entrez votre clé" autocomplete="off" />
+    <input type="password" id="api-key" placeholder="292" autocomplete="off" />
   </div>
 
   <div class="card">
@@ -278,7 +278,7 @@
       "🇧🇬": "Bulgarian", "🇨🇳": "Chinese", "🇭🇷": "Croatian",
       "🇨🇿": "Czech", "🇩🇰": "Danish", "🇳🇱": "Dutch",
       "🇪🇬": "Egyptian Arabic", "🇫🇮": "Finnish", "🇫🇷": "French",
-      "🇩🇪": "German", "🇬🇷": "Greek", "🇵🇸": "Hebrew",
+      "🇩🇪": "German", "🇬🇷": "Greek", "🇮🇱": "Hebrew",
       "🇮🇳": "Hindi", "🇭🇺": "Hungarian", "🇮🇸": "Icelandic",
       "🇮🇩": "Indonesian", "🇮🇶": "Iraqi Arabic", "🇮🇪": "Irish",
       "🇮🇹": "Italian", "🇯🇵": "Japanese", "🇬🇱": "Kalaallisut",
@@ -289,7 +289,7 @@
       "🇷🇺": "Russian", "🇷🇸": "Serbian", "🇪🇸": "Spanish",
       "🇸🇩": "Sudanese Arabic", "🇸🇪": "Swedish", "🇵🇭": "Tagalog",
       "🇹🇭": "Thai", "🇹🇷": "Turkish", "🇺🇦": "Ukrainian",
-      "🇵🇰": "Urdu", "🇻🇳": "Vietnamese",
+      "🇵🇰": "Urdu", "🇻🇳": "Vietnamese"
     };
     const LANG_TO_EMOJI = Object.fromEntries(Object.entries(LANG_EMOJIS).map(([k,v])=>[v,k]));
     const SUPPORTED = Object.values(LANG_EMOJIS).join(", ");
@@ -297,20 +297,25 @@
     let selectedLang = null;
     let backThought = false;
 
-    // Build language grid
-    const grid = document.getElementById("lang-grid");
-    Object.entries(LANG_EMOJIS).forEach(([emoji, lang]) => {
-      const btn = document.createElement("button");
-      btn.className = "lang-btn";
-      btn.title = lang;
-      btn.dataset.emoji = emoji;
-      btn.textContent = emoji;
-      btn.onclick = () => selectLang(emoji);
-      grid.appendChild(btn);
+    document.addEventListener("DOMContentLoaded", () => {
+      const grid = document.getElementById("lang-grid");
+      if (grid) {
+        Object.entries(LANG_EMOJIS).forEach(([emoji, lang]) => {
+          const btn = document.createElement("button");
+          btn.className = "lang-btn";
+          btn.title = lang;
+          btn.dataset.emoji = emoji;
+          btn.textContent = emoji;
+          btn.onclick = () => selectLang(emoji);
+          grid.appendChild(btn);
+        });
+      }
+      
+      const inputEl = document.getElementById("text-input");
+      if (inputEl) {
+        inputEl.addEventListener("input", updateGoBtn);
+      }
     });
-
-    // Text input listener
-    document.getElementById("text-input").addEventListener("input", updateGoBtn);
 
     function selectLang(emoji) {
       if (selectedLang === emoji) {
@@ -322,24 +327,32 @@
         b.classList.toggle("selected", b.dataset.emoji === selectedLang);
       });
       const label = document.getElementById("selected-lang-label");
-      label.textContent = selectedLang ? `→ ${LANG_EMOJIS[selectedLang]}` : "";
+      if (label) {
+        label.textContent = selectedLang ? `→ ${LANG_EMOJIS[selectedLang]}` : "";
+      }
       updateGoBtn();
     }
 
     function toggleBT() {
       backThought = !backThought;
-      document.getElementById("bt-btn").classList.toggle("active", backThought);
+      const btn = document.getElementById("bt-btn");
+      if (btn) btn.classList.toggle("active", backThought);
       updateGoBtn();
     }
 
     function updateGoBtn() {
-      const text = document.getElementById("text-input").value.trim();
+      const inputEl = document.getElementById("text-input");
+      const goBtn = document.getElementById("go-btn");
+      if (!inputEl || !goBtn) return;
+      
+      const text = inputEl.value.trim();
       const active = text && (selectedLang || backThought);
-      document.getElementById("go-btn").disabled = !active;
+      goBtn.disabled = !active;
     }
 
     async function callGemini(text, targetLang, mode) {
-      const apiKey = document.getElementById("api-key").value.trim();
+      const apiKeyEl = document.getElementById("api-key");
+      const apiKey = apiKeyEl ? apiKeyEl.value.trim() : "";
       if (!apiKey) throw new Error("Please Enter Your Gemini API Key");
 
       let prompt;
@@ -409,35 +422,73 @@
 
     function setOutput(html) {
       const section = document.getElementById("output-section");
-      document.getElementById("output-inner").innerHTML = html;
-      section.classList.add("visible");
+      const inner = document.getElementById("output-inner");
+      if (inner && section) {
+        inner.innerHTML = html;
+        section.classList.add("visible");
+      }
     }
 
     function setLoading(on) {
       const btn = document.getElementById("go-btn");
+      if (!btn) return;
       btn.disabled = on;
       btn.innerHTML = on ? '<span class="loader"></span>Processing...' : "Go";
     }
 
     async function handleGo() {
-      const text = document.getElementById("text-input").value.trim();
+      const inputEl = document.getElementById("text-input");
+      if (!inputEl) return;
+      const text = inputEl.value.trim();
       if (!text) return;
 
       setLoading(true);
-      document.getElementById("output-section").classList.remove("visible");
+      const section = document.getElementById("output-section");
+      if (section) section.classList.remove("visible");
 
       try {
         const targetLang = selectedLang ? LANG_EMOJIS[selectedLang] : null;
 
-        // ── Truth only ──
         if (backThought && !selectedLang) {
           const { sourceLang, result } = await callGemini(text, null, "truth");
           if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`); return; }
           setOutput(`<p class="result-main">${result}</p>`);
         }
 
-        // ── Translation only ──
         else if (!backThought && selectedLang) {
           const { sourceLang, result } = await callGemini(text, targetLang, "translate");
-          if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`); return
-    
+          if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`); return; }
+          const emoji = LANG_TO_EMOJI[sourceLang] ?? "🏳️";
+          if (sourceLang === targetLang) {
+            setOutput(`<p class="result-muted">${emoji} Already in ${sourceLang}.</p>`);
+          } else {
+            setOutput(`<p class="result-main">${emoji} ${result}</p>`);
+          }
+        }
+
+        else if (backThought && selectedLang) {
+          const { sourceLang, result: truthText } = await callGemini(text, null, "truth");
+          if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`); return; }
+          const emoji = LANG_TO_EMOJI[sourceLang] ?? "🏳️";
+
+          if (sourceLang === targetLang) {
+            setOutput(
+              `<p class="result-muted">${emoji} Already in ${sourceLang}.</p>` +
+              `<p class="result-truth">${truthText}</p>`
+            );
+          } else {
+            const { result: translatedTruth } = await callGemini(truthText, targetLang, "translate");
+            setOutput(`<p class="result-main">${emoji} ${translatedTruth}</p>`);
+          }
+        }
+
+      } catch (e) {
+        setOutput(`<p class="error-msg">❌ ${e.message}</p>`);
+      } finally {
+        setLoading(false);
+        updateGoBtn();
+      }
+    }
+  </script>
+</body>
+</html>
