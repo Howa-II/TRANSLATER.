@@ -338,7 +338,7 @@
     async function callGemini(text, targetLang, mode) {
       const apiKeyEl = document.getElementById("api-key");
       const apiKey = apiKeyEl ? apiKeyEl.value.trim() : "";
-      if (!apiKey) throw new Error("Please Enter Your Gemini API Key");
+      if (!apiKey) throw new Error("Please Enter your Gemini API Key");
 
       let prompt;
       if (mode === "translate" && targetLang) {
