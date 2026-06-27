@@ -224,7 +224,7 @@
 
   <!-- API Key input -->
   <div id="key-banner">
-    <label for="api-key">Gemini API Key</label>
+    <label for="api-key">GEMINI API KEY</label>
     <input type="password" id="api-key" placeholder="292" autocomplete="off" />
   </div>
 
@@ -345,7 +345,7 @@
     async function callGemini(text, targetLang, mode) {
       const apiKeyEl = document.getElementById("api-key");
       const apiKey = apiKeyEl ? apiKeyEl.value.trim() : "";
-      if (!apiKey) throw new Error("Please, Provide your Gemini API Key");
+      if (!apiKey) throw new Error("Please, Provide your GEMINI API KEY");
 
       let prompt;
       if (mode === "translate" && targetLang) {
