@@ -127,16 +127,16 @@
     }
     .lang-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr); /* Configuration pour 5 langues par ligne */
-      gap: 10px; /* Plus d'espace car il y a moins d'éléments par ligne */
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
     }
     .lang-btn {
-      padding: 12px 4px; /* Un peu plus grand pour un meilleur rendu visuel */
+      padding: 12px 4px;
       border-radius: 10px;
       border: 1.5px solid #2a2a35;
       background: #1e1e27;
       cursor: pointer;
-      font-size: 1.5rem; /* Drapeaux légèrement plus grands et lisibles */
+      font-size: 1.5rem;
       text-align: center;
       transition: all 0.12s;
       line-height: 1;
@@ -222,33 +222,40 @@
     <p>Translate or Reveal the Hidden Truth</p>
   </header>
 
+  <!-- API Key input -->
   <div id="key-banner">
     <label for="api-key">Gemini API Key</label>
     <input type="password" id="api-key" placeholder="292" autocomplete="off" />
   </div>
 
+  <!-- Main card -->
   <div class="card">
 
+    <!-- Text input -->
     <div class="input-area">
       <textarea id="text-input" rows="4" placeholder="Enter a Message"></textarea>
     </div>
 
     <div class="divider"></div>
 
+    <!-- Back Thought -->
     <div class="bt-area">
       <button id="bt-btn" onclick="toggleBT()">🔎 Back Thought</button>
     </div>
 
+    <!-- Language grid -->
     <div class="lang-area">
-      <div class="lang-label">Target Language</div>
+      <div class="lang-label">The Target Languages</div>
       <div class="lang-grid" id="lang-grid"></div>
       <div id="selected-lang-label"></div>
     </div>
 
+    <!-- Go -->
     <div class="go-area">
-      <button id="go-btn" disabled onclick="handleGo()">Go</button>
+      <button id="go-btn" disabled onclick="handleGo()">GO !</button>
     </div>
 
+    <!-- Output -->
     <div id="output-section">
       <div class="divider"></div>
       <div class="output-inner" id="output-inner"></div>
@@ -418,7 +425,7 @@
       const btn = document.getElementById("go-btn");
       if (!btn) return;
       btn.disabled = on;
-      btn.innerHTML = on ? '<span class="loader"></span>Processing...' : "Go";
+      btn.innerHTML = on ? '<span class="loader"></span>Processing...' : "GO !";
     }
 
     async function handleGo() {
