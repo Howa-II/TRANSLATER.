@@ -285,7 +285,6 @@
         <div class="textarea-footer">
           <div class="char-counter" id="char-counter">0 / 292</div>
         </div>
-        <!-- Ligne et message d'erreur intégrés à l'intérieur du bloc -->
         <div class="limit-warning-zone" id="limit-warning-zone">
           <hr class="limit-warning-line" />
           <div class="limit-warning-text">❌ It is Impossible to Enter More than 292 Characters</div>
@@ -334,7 +333,7 @@
       "🇮🇩": "Indonesian", "🇮🇶": "Iraqi Arabic", "🇮🇪": "Irish",
       "🇮🇹": "Italian", "🇯🇵": "Japanese", "🇬🇱": "Kalaallisut",
       "🇰🇷": "Korean", "🇱🇧": "Lebanese Arabic", "🇱🇾": "Libyan Arabic",
-      "🇩🇿": "Maghrebi dialect", "🇲🇾": "Malay", "🇲🇽": "Mexican Spanish",
+      "🇩🇿": "Maghrebi Dialect", "🇲🇾": "Malay", "🇲🇽": "Mexican Spanish",
       "🇳🇴": "Norwegian", "🇮🇷": "Persian", "🇵🇱": "Polish",
       "🇵🇹": "Portuguese", "🇨🇦": "Quebec French", "🇷🇴": "Romanian",
       "🇷🇺": "Russian", "🇷🇸": "Serbian", "🇪🇸": "Spanish",
@@ -427,24 +426,34 @@
           `Text: ${text}`;
       }
 
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.7 }
-          })
-        }
-      );
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error?.message ?? "Gemini API error");
+      let response;
+      try {
+        response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.7 }
+            })
+          }
+        );
+      } catch (netErr) {
+        const e = new Error("Network error");
+        e.isGeminiCrash = true;
+        throw e;
       }
 
-      const data = await res.json();
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        const msg = errData.error?.message || "Gemini API failure";
+        const e = new Error(msg);
+        e.isGeminiCrash = true;
+        throw e;
+      }
+
+      const data = await response.json();
       const raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
       const lines = raw.trim().split("\n");
 
@@ -468,6 +477,7 @@
       return { sourceLang, result };
     }
 
+    // Le titre conserve le ❌ originel pour les erreurs
     function setOutput(html, isError = false) {
       const block = document.getElementById("output-block");
       const title = document.getElementById("output-title");
@@ -486,7 +496,6 @@
       }
     }
 
-    // Modification ici pour intégrer le saut de ligne dans le traitement
     function setButtonsState(loading) {
       const cBtn = document.getElementById("confirm-btn");
       const xBtn = document.getElementById("cancel-btn");
@@ -504,6 +513,7 @@
     }
 
     function handleCancel() {
+      // Conserve le ❌ d'origine pour l'action Cancelled
       setOutput(`<p class="result-main">❌ Cancelled</p>`);
 
       setTimeout(() => {
@@ -540,7 +550,8 @@
       if (!hasAction) missing.push("Translate or Reveal the Hidden Truth");
 
       if (missing.length > 0) {
-        let errorMsg = "❌ Please,\n";
+        // Changement ciblé ici : ⚠️ au lieu de ❌ pour les oublis d'options
+        let errorMsg = "⚠️ Please,\n";
         if (missing.length === 1) {
           errorMsg += missing[0];
         } else if (missing.length === 2) {
@@ -577,7 +588,7 @@
         else if (backThought && selectedLang) {
           const { sourceLang, result: truthText } = await callGemini(text, null, "truth", apiKey);
           if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`, true); return; }
-          const emoji = LANG_TO_EMOJI[sourceLang] ?? "🏳️";
+          const emoji = LANG_TO_TO_EMOJI = LANG_TO_EMOJI[sourceLang] ?? "🏳️";
 
           if (sourceLang === targetLang) {
             setOutput(
@@ -591,7 +602,13 @@
         }
 
       } catch (e) {
-        setOutput(`<p class="error-msg">❌ ${e.message}</p>`, true);
+        if (e.isGeminiCrash) {
+          // Surcharge ou problème lié à Gemini : Changement ciblé vers ⚠️
+          setOutput(`<p class="error-msg">⚠️ Please,\nTry Again</p>`, true);
+        } else {
+          // Pour les erreurs de script internes ou locales, conserve le format standard
+          setOutput(`<p class="error-msg">❌ ${e.message}</p>`, true);
+        }
       } finally {
         setButtonsState(false);
       }
