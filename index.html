@@ -401,11 +401,9 @@
       if (btn) btn.classList.toggle("active", backThought);
     }
 
-    // REGLE MAJEURE : On compte la ligne entière (Drapeau + Espace + Texte)
     function formatMessageWithEmoji(emoji, text) {
       const singleLineString = `${emoji} ${text}`;
       
-      // Si la ligne globale dépasse 45 caractères, le drapeau saute une ligne
       if (singleLineString.length > 45) {
         return `${emoji}<br>${text}`;
       } else {
@@ -560,7 +558,7 @@
       if (!hasAction) missing.push("Translate or Reveal the Hidden Truth");
 
       if (missing.length > 0) {
-        // Isolement de l'émoji ⚠️ sur sa ligne
+        // Garde la structure avec saut de ligne pour les oublis de saisie
         let errorMsg = "⚠️\nPlease,\n";
         if (missing.length === 1) {
           errorMsg += missing[0];
@@ -591,7 +589,6 @@
           if (sourceLang === targetLang) {
             setOutput(`<p class="result-muted">${emoji} Already in ${sourceLang}.</p>`);
           } else {
-            // Utilise la règle incluant la longueur globale avec le drapeau
             const formatted = formatMessageWithEmoji(emoji, result);
             setOutput(`<p class="result-main">${formatted}</p>`);
           }
@@ -609,7 +606,6 @@
             );
           } else {
             const { result: translatedTruth } = await callGemini(truthText, targetLang, "translate", apiKey);
-            // Utilise la règle incluant la longueur globale avec le drapeau
             const formatted = formatMessageWithEmoji(emoji, translatedTruth);
             setOutput(`<p class="result-main">${formatted}</p>`);
           }
@@ -617,8 +613,8 @@
 
       } catch (e) {
         if (e.isGeminiCrash) {
-          // Isolement du ⚠️ sur sa ligne pour l'erreur Try Again
-          setOutput(`<p class="error-msg">⚠️\nPlease,\nTry Again</p>`, true);
+          // EXCEPTION : Affichage linéaire unique pour le crash Gemini
+          setOutput(`<p class="error-msg">⚠️ Please, Try Again</p>`, true);
         } else {
           setOutput(`<p class="error-msg">❌ ${e.message}</p>`, true);
         }
