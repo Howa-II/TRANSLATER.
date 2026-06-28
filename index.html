@@ -43,7 +43,7 @@
       max-width: 640px;
       display: flex;
       flex-direction: column;
-      gap: 20px; /* Espace entre chaque bloc */
+      gap: 20px;
     }
 
     /* ── Style de base de chaque bloc ── */
@@ -152,7 +152,6 @@
     .action-area {
       display: flex;
       gap: 12px;
-      padding: 0; /* Aligné sur le padding du bloc */
     }
     .action-btn {
       flex: 1;
@@ -175,7 +174,7 @@
     #confirm-btn { background: #16a34a; }
     #cancel-btn { background: #dc2626; }
 
-    /* ── Bloc 6 : Output (Caché au début) ── */
+    /* ── Bloc 6 : Output ── */
     #output-block {
       display: none;
       border-color: #3a3a50;
@@ -232,27 +231,27 @@
     <div class="block">
       <div class="block-title">GEMINI API KEY</div>
       <div class="key-input-container">
-        <input type="password" id="api-key" placeholder="Enter your API Key here" autocomplete="off" />
+        <input type="password" id="api-key" placeholder="Enter your GEMINI API KEY" autocomplete="off" />
       </div>
     </div>
 
-    <!-- BLOC 2: PROVIDE A MESSAGE -->
+    <!-- BLOC 2: Provide a Message -->
     <div class="block">
       <div class="block-title">Provide a Message</div>
-      <textarea id="text-input" rows="4" placeholder="Type or paste your text..."></textarea>
+      <textarea id="text-input" rows="4" placeholder="292 . . ."></textarea>
     </div>
 
-    <!-- BLOC 3: BACK THOUGHT -->
+    <!-- BLOC 3: Back Thought -->
     <div class="block">
-      <div class="block-title">Back Thought Mode</div>
-      <button id="bt-btn" onclick="toggleBT()">🔎 Back Thought</button>
+      <div class="block-title">Back Thought</div>
+      <button id="bt-btn" onclick="toggleBT()">🔎 Reveal the Hidden Truth</button>
     </div>
 
-    <!-- BLOC 4: THE TARGET LANGUAGES -->
+    <!-- BLOC 4: The Target Languages -->
     <div class="block">
       <div class="block-title">The Target Languages</div>
       <div class="lang-grid" id="lang-grid"></div>
-      <div id="selected-lang-label"></div> <!-- La langue avec la flèche s'affiche ici -->
+      <div id="selected-lang-label"></div>
     </div>
 
     <!-- BLOC 5: CONFIRM / CANCEL -->
@@ -263,7 +262,7 @@
       </div>
     </div>
 
-    <!-- BLOC 6: OUTPUT & ERRORS (Absent au début) -->
+    <!-- BLOC 6: OUTPUT & ERRORS (Masqué par défaut) -->
     <div class="block" id="output-block">
       <div class="block-title" id="output-title">Response</div>
       <div id="output-inner"></div>
@@ -410,6 +409,7 @@
       }
     }
 
+    font-style
     function hideOutput() {
       const block = document.getElementById("output-block");
       if (block) {
@@ -434,29 +434,23 @@
     }
 
     function handleCancel() {
-      // 1. Affiche momentanément le statut d'annulation dans le bloc 6
       setOutput(`<p class="result-main">❌ Cancelled</p>`);
 
-      // 2. Attend 1.2s puis efface tout et fait disparaître le bloc 6
       setTimeout(() => {
-        // Reset inputs
         const apiKeyEl = document.getElementById("api-key");
         const inputEl = document.getElementById("text-input");
         if (apiKeyEl) apiKeyEl.value = "";
         if (inputEl) inputEl.value = "";
 
-        // Reset languages
         selectedLang = null;
         document.querySelectorAll(".lang-btn").forEach(b => b.classList.remove("selected"));
         const label = document.getElementById("selected-lang-label");
         if (label) label.textContent = "";
 
-        // Reset Back Thought
         backThought = false;
         const btBtn = document.getElementById("bt-btn");
         if (btBtn) btBtn.classList.remove("active");
 
-        // Fait complètement disparaître le bloc 6
         hideOutput();
       }, 1200); 
     }
@@ -469,7 +463,6 @@
       const text = inputEl ? inputEl.value.trim() : "";
       const hasAction = selectedLang || backThought;
 
-      // --- Validation ---
       let missing = [];
       if (!apiKey) missing.push("Provide your GEMINI API KEY");
       if (!text) missing.push("Provide a Message");
@@ -488,7 +481,6 @@
         return;
       }
 
-      // --- Lancement API ---
       setButtonsState(true);
 
       try {
