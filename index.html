@@ -632,4 +632,21 @@
             setOutput(
               mainRowHTML +
               ipaRowHTML +
-              `<p class="result-credit">Translated by Gemin
+              `<p class="result-credit">Translated by Gemin 2.5 Flash</p>`
+            );
+          }
+        }
+
+      } catch (e) {
+        if (e.isGeminiCrash) {
+          setOutput(`<p class="error-msg">⚠️ Please, Try Again</p>`, true);
+        } else {
+          setOutput(`<p class="error-msg">❌ ${e.message}</p>`, true);
+        }
+      } finally {
+        setButtonsState(false);
+      }
+    }
+  </script>
+</body>
+</html>
