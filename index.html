@@ -225,19 +225,18 @@
       display: block;
     }
 
-    /* Structures Flexbox adaptatives intelligentes */
     .result-row {
       display: flex;
       flex-wrap: wrap;
       align-items: flex-start;
-      gap: 0 8px; /* Écart de 8px horizontal uniquement si alignés */
+      gap: 0 8px;
       line-height: 1.7;
     }
     .result-row .emoji-prefix {
       flex-shrink: 0;
     }
     .result-row .text-content {
-      flex: 1 1 300px; /* Si la zone de texte fait moins de 300px (mobile), elle saute à la ligne */
+      flex: 1 1 300px;
       min-width: 0;
     }
 
@@ -351,7 +350,7 @@
 
   <script>
     const LANG_EMOJIS = {
-      "🇺🇸": "American English", "🇲🇦": "ⵜⴰ幕ⴰⵣⵉⵖⵜ", "🇸🇦": "العربية",
+      "🇺🇸": "American English", "🇲🇦": "ⵜⴰⵎⴰⵣⵉⵖⵜ", "🇸🇦": "العربية",
       "🇦🇺": "Australian English", "🇧🇷": "Português Brasileiro", "🇬🇧": "British English",
       "🇧🇬": "Български", "🇨🇳": "中文", "🇭🇷": "Hrvatski",
       "🇨🇿": "Čeština", "🇩🇰": "Dansk", "🇳🇱": "Nederlands",
@@ -361,16 +360,14 @@
       "🇮🇩": "Bahasa Indonesia", "🇮🇶": "اللهجة العراقية", "🇮🇪": "Gaeilge",
       "🇮🇹": "Italiano", "🇯🇵": "日本語", "🇬🇱": "Kalaallisut",
       "🇰🇷": "한국어", "🇱🇧": "اللهجة اللبنانية", "🇱🇾": "اللهجة الليبية",
-      "🇩🇿": "الدارجة المغربية", "🇲🇾": "Bahasa Melayu", "🇲🇽": "Español mexicano",
+      "🇩🇿": "الدارجة المغربية", "🇲🇾": "Bahasa Melayu", "🇲🇽": "Español Mexicano",
       "🇳🇴": "Norsk", "🇮🇷": "فارسی", "🇵🇱": "Polski",
       "🇵🇹": "Português", "🇨🇦": "Français Québécois", "🇷🇴": "Română",
       "🇷🇺": "Русский", "🇷🇸": "Српски", "🇪🇸": "Español",
-      "🇸🇩": "اللهجة Sudanese", "🇸🇪": "Svenska", "🇵🇭": "Tagalog",
+      "🇸🇩": "اللهجة السودانية", "🇸🇪": "Svenska", "🇵🇭": "Tagalog",
       "🇹🇭": "ไทย", "🇹🇷": "Türkçe", "🇺🇦": "Українська",
       "🇵🇰": "اردو", "🇻🇳": "Tiếng Việt"
     };
-    // Correction manuelle de la typo de l'initialisation du dictionnaire pour Tamazight
-    LANG_EMOJIS["🇲🇦"] = "ⵜⴰⵎⴰⵣⵉⵖⵜ";
 
     const LANG_TO_EMOJI = Object.fromEntries(Object.entries(LANG_EMOJIS).map(([k,v])=>[v,k]));
     const SUPPORTED = Object.values(LANG_EMOJIS).join(", ");
@@ -378,20 +375,19 @@
     let selectedLang = null;
     let backThought = false;
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const grid = document.getElementById("lang-grid");
-      if (grid) {
-        Object.entries(LANG_EMOJIS).forEach(([emoji, lang]) => {
-          const btn = document.createElement("button");
-          btn.className = "lang-btn";
-          btn.title = lang;
-          btn.dataset.emoji = emoji;
-          btn.textContent = emoji;
-          btn.onclick = () => selectLang(emoji);
-          grid.appendChild(btn);
-        });
-      }
-    });
+    // Génération immédiate de la grille (sans attendre DOMContentLoaded)
+    const grid = document.getElementById("lang-grid");
+    if (grid) {
+      Object.entries(LANG_EMOJIS).forEach(([emoji, lang]) => {
+        const btn = document.createElement("button");
+        btn.className = "lang-btn";
+        btn.title = lang;
+        btn.dataset.emoji = emoji;
+        btn.textContent = emoji;
+        btn.onclick = () => selectLang(emoji);
+        grid.appendChild(btn);
+      });
+    }
 
     function updateCounter() {
       const textarea = document.getElementById("text-input");
@@ -432,7 +428,6 @@
       if (btn) btn.classList.toggle("active", backThought);
     }
 
-    // Nouvelle fonction HTML qui utilise le CSS flexbox adaptatif
     function createRowHTML(className, emoji, text) {
       return `
         <div class="${className} result-row">
@@ -444,12 +439,12 @@
 
     async function callGemini(text, targetLang, mode, apiKey) {
       let prompt;
-      const writingSystemInstruction = "CRITICAL: You MUST write the translation or text using the native script/alphabet and natural writing system of that language. Crucially, if the language is 'ⵜⴰⵎⴰⵣⵉⵖⵜ' (Tamazight/Amazigh), you MUST write exclusively using the native Tifinagh script (e.g. ⴰ, ⴱ, ⴳ...). If the language is Arabic or an Arabic dialect, use ONLY Arabic script characters (مثل سلام), NEVER transliterate or use the Latin alphabet.";
+      const writingSystemInstruction = "CRITICAL: You MUST write the translation or text using the native script/alphabet and natural writing system of that language. Crucially, if the language is 'ⵜⴰⵎⴰざⵉⵖⵜ' (Tamazight/Amazigh), you MUST write exclusively using the native Tifinagh script (e.g. ⴰ, ⴱ, ⴳ...). If the language is Arabic or an Arabic dialect, use ONLY Arabic script characters (مثل سلام), NEVER transliterate or use the Latin alphabet.";
 
       if (mode === "translate" && targetLang) {
         prompt =
           `Do three things at once:\n` +
-          `1. Detect the language of this text from this list ONLY: ${SUPPORTED}. If not in list, write UNKNOWN.\n` +
+          `1. Detect the language of this text from this list ONLY: ${SUPPORTED}.\n` +
           `2. Translate the text to ${targetLang}.\n` +
           `3. Provide the exact phonetic transcription of that translation using the International Phonetic Alphabet (IPA).\n` +
           `${writingSystemInstruction}\n\n` +
@@ -464,7 +459,7 @@
           : "in the same language as the original text";
         prompt =
           `Do three things at once:\n` +
-          `1. Detect the language of this text from this list ONLY: ${SUPPORTED}. If not in list, write UNKNOWN.\n` +
+          `1. Detect the language of this text from this list ONLY: ${SUPPORTED}.\n` +
           `2. As a humorous Discord bot, reveal the hidden true meaning of this message based on Discord/gaming clichés. Reply ${langInstruction}, short and funny.\n` +
           `3. Only if a target language was specified, provide its exact International Phonetic Alphabet (IPA) transcription on the third line. Otherwise, leave the IPA line empty.\n` +
           `${writingSystemInstruction}\n\n` +
@@ -617,14 +612,24 @@
       try {
         const targetLang = selectedLang ? LANG_EMOJIS[selectedLang] : null;
 
-        // CAS 1 : Back Thought tout seul
         if (backThought && !selectedLang) {
           const { sourceLang, result } = await callGemini(text, null, "truth", apiKey);
           if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`, true); return; }
           setOutput(`<p class="result-main">${result}</p>`);
         }
 
-        // CAS 2 : Traduction classique seule
         else if (!backThought && selectedLang) {
           const { sourceLang, result, ipa } = await callGemini(text, targetLang, "translate", apiKey);
-          if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`, t
+          if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`, true); return; }
+          const emoji = LANG_TO_EMOJI[sourceLang] ?? "🏳️";
+          
+          if (sourceLang === targetLang) {
+            setOutput(`<p class="result-muted">${emoji} Already in ${sourceLang}.</p>`);
+          } else {
+            const mainRowHTML = createRowHTML("result-main", emoji, result);
+            const ipaRowHTML = createRowHTML("result-ipa", "🌐", ipa || "N/A");
+            
+            setOutput(
+              mainRowHTML +
+              ipaRowHTML +
+              `<p class="result-credit">Translated by Gemin
