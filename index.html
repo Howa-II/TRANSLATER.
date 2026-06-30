@@ -332,7 +332,7 @@
 
   <script>
     const LANG_EMOJIS = {
-      "🇺🇸": "American English", "🇲🇦": "ⵜⴰⵎⴰⵣⵉⵖⵜ", "🇸🇦": "العربية",
+      "🇺🇸": "American English", "🇲🇦": "ⵜⴰⵎⴰざⵉⵖⵜ", "🇸🇦": "العربية",
       "🇦🇺": "Australian English", "🇧🇷": "Português Brasileiro", "🇬🇧": "British English",
       "🇧🇬": "Български", "🇨🇳": "中文", "🇭🇷": "Hrvatski",
       "🇨🇿": "Čeština", "🇩🇰": "Dansk", "🇳🇱": "Nederlands",
@@ -357,7 +357,6 @@
     let selectedLang = null;
     let backThought = false;
 
-    // Génération immédiate de la grille des langues
     const grid = document.getElementById("lang-grid");
     if (grid) {
       Object.entries(LANG_EMOJIS).forEach(([emoji, lang]) => {
@@ -445,7 +444,7 @@
           `2. As a humorous Discord bot, reveal the hidden true meaning of this message based on Discord/gaming clichés. Reply ${langInstruction}, short and funny.\n` +
           `3. Crucial: You MUST provide the exact phonetic transcription of that hidden truth text using the International Phonetic Alphabet (IPA) on the third line.\n` +
           `${writingSystemInstruction}\n\n` +
-          `Reply in this exact format (3 lines only, do not include labels like 'Hidden Truth:' inside the content):\n` +
+          `Reply in this exact format (3 lines only, do not include labels like 'Hidden Truth:', 'Traduction Discord:', 'Traduction :' or 'En langage Discord :' inside the content):\n` +
           `LANG: <detected language>\n` +
           `RESULT: <hidden truth text>\n` +
           `IPA: <international phonetic alphabet transcription>\n\n` +
@@ -497,8 +496,12 @@
             }
           }
         } else if (line.startsWith("RESULT:")) {
-          // Nettoyage au cas où l'IA s'obstine à écrire "Hidden Truth:"
-          result = line.replace("RESULT:", "").replace(/hidden truth\s*:\s*/i, "").trim();
+          result = line.replace("RESULT:", "")
+                       .replace(/hidden truth\s*:\s*/i, "")
+                       .replace(/traduction discord\s*:\s*/i, "")
+                       .replace(/traduction\s*:\s*/i, "")
+                       .replace(/en langage discord\s*:\s*/i, "")
+                       .trim();
         } else if (line.startsWith("IPA:")) {
           ipa = line.replace("IPA:", "").trim();
         }
@@ -595,7 +598,7 @@
       try {
         const targetLang = selectedLang ? LANG_EMOJIS[selectedLang] : null;
 
-        // CAS 1 : Back Thought seul (Affiche juste le texte de la vérité brute)
+        // CAS 1 : Back Thought seul
         if (backThought && !selectedLang) {
           const { sourceLang, result } = await callGemini(text, null, "truth", apiKey);
           if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`, true); return; }
@@ -606,46 +609,16 @@
         else if (!backThought && selectedLang) {
           const { sourceLang, result, ipa } = await callGemini(text, targetLang, "translate", apiKey);
           if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`, true); return; }
+          
           const emoji = LANG_TO_EMOJI[sourceLang] ?? "🏳️";
           
           if (sourceLang === targetLang) {
             setOutput(`<p class="result-muted">${emoji} Already in ${sourceLang}.</p>`);
           } else {
-            const mainRowHTML = createRowHTML("result-main", emoji, result);
-            const ipaRowHTML = createRowHTML("result-ipa", "🌐", ipa || "N/A");
-            setOutput(mainRowHTML + ipaRowHTML);
-          }
-        }
-
-        // CAS 3 : Back Thought + Traduction combinés (Avec Alphabet International fonctionnel !)
-        else if (backThought && selectedLang) {
-          const { sourceLang, result: truthText, ipa } = await callGemini(text, targetLang, "truth", apiKey);
-          if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`, true); return; }
-
-        const emoji = LANG_TO_EMOJI[sourceLang] ?? "🏳️";
-
-          if (sourceLang === targetLang) {
-            setOutput(
-              `<p class="result-muted">${emoji} Already in ${sourceLang}.</p>` +
-              `<p class="result-truth">${truthText}</p>`
-            );
-          } else {
-            const mainRowHTML = createRowHTML("result-main", emoji, truthText);
-            const ipaRowHTML = createRowHTML("result-ipa", "🌐", ipa || "N/A");
-            setOutput(mainRowHTML + ipaRowHTML);
-          }
-        }
-
-      } catch (e) {
-        if (e.isGeminiCrash) {
-          setOutput(`<p class="error-msg">⚠️ Please, Try Again</p>`, true);
-        } else {
-          setOutput(`<p class="error-msg">❌ ${e.message}</p>`, true);
-        }
-      } finally {
-        setButtonsState(false);
-      }
-    }
-  </script>
-</body>
-</html>
+            // Si l'IPA est manquant ou invalide, on affiche l'erreur "Please, Try Again"
+            if (!ipa || ipa.toUpperCase() === "N/A" || ipa.trim() === "") {
+              setOutput(`<p class="error-msg">⚠️ Please, Try Again</p>`, true);
+            } else {
+              const mainRowHTML = createRowHTML("result-main", emoji, result);
+              const ipaRowHTML = createRowHTML("result-ipa", "🌐", ipa);
+              setOutput(mainRowH
