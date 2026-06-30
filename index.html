@@ -225,17 +225,19 @@
       display: block;
     }
 
-    /* ── GESTION STRICTE DU SAUT DE LIGNE CONDITIONNEL ── */
+    /* ── ALIGNEMENT ET LOGIQUE DES LIGNES CORRIGÉS ── */
     .result-row {
       display: flex;
-      flex-direction: row;
-      align-items: flex-start;
+      flex-direction: row; 
+      align-items: center; /* ALIGNEMENT PARFAIT : Centre verticalement l'émoji et l'écriture quand ils sont côte à côte */
       gap: 8px;
       line-height: 1.7;
     }
     
     .result-row .emoji-prefix {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       font-size: 1.3rem;
     }
 
@@ -245,9 +247,10 @@
       word-break: break-word;
     }
 
-    /* On applique la direction calculée en JS selon les longueurs de chaînes respectives */
-    .result-row[style*="--row-direction"] {
-      flex-direction: var(--row-direction, row);
+    /* Quand la ligne passe l'un sous l'autre, on réaligne l'émoji au début (à gauche) */
+    .result-row.force-column {
+      flex-direction: column;
+      align-items: flex-start; 
     }
 
     .result-main {
@@ -419,15 +422,14 @@
       if (btn) btn.classList.toggle("active", backThought);
     }
 
-    // Gère le cas de figure de manière totalement indépendante pour chaque bloc de texte injecté
     function createRowHTML(className, emoji, text) {
       const len = text.length;
       const isMobile = window.innerWidth <= 600;
       const limit = isMobile ? 40 : 70;
-      const direction = len > limit ? "column" : "row";
+      const forceColumnClass = len > limit ? "force-column" : "";
 
       return `
-        <div class="${className} result-row" style="--row-direction: ${direction};">
+        <div class="${className} result-row ${forceColumnClass}">
           <span class="emoji-prefix">${emoji}</span>
           <span class="text-content">${text}</span>
         </div>
@@ -436,7 +438,7 @@
 
     async function callGemini(text, targetLang, mode, apiKey) {
       let prompt;
-      const writingSystemInstruction = "CRITICAL: You MUST write the translation or text using the native script/alphabet and natural writing system of that language. Crucially, if the language is 'ⵜⴰⵎⴰざⵉⵖⵜ' (Tamazight/Amazigh), you MUST write exclusively using the native Tifinagh script. If the language is Arabic, use ONLY Arabic script characters.";
+      const writingSystemInstruction = "CRITICAL: You MUST write the translation or text using the native script/alphabet and natural writing system of that language. Crucially, if the language is 'ⵜⴰⵎⴰⵣⵉⵖⵜ' (Tamazight/Amazigh), you MUST write exclusively using the native Tifinagh script. If the language is Arabic, use ONLY Arabic script characters.";
 
       if (mode === "translate" && targetLang) {
         prompt =
@@ -607,7 +609,7 @@
             } else {
               setOutput(createRowHTML("result-main", emoji, result) + createRowHTML("result-ipa", "🌐", ipa));
             }
-          }
+            }
         }
         else if (backThought && selectedLang) {
           const { sourceLang, result: truthText, ipa } = await callGemini(text, targetLang, "truth", apiKey);
