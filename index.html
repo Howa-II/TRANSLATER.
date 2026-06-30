@@ -224,10 +224,38 @@
     #output-block.visible {
       display: block;
     }
+
+    /* Structures Flexbox adaptatives intelligentes */
+    .result-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 0 8px; /* Écart de 8px horizontal uniquement si alignés */
+      line-height: 1.7;
+    }
+    .result-row .emoji-prefix {
+      flex-shrink: 0;
+    }
+    .result-row .text-content {
+      flex: 1 1 300px; /* Si la zone de texte fait moins de 300px (mobile), elle saute à la ligne */
+      min-width: 0;
+    }
+
     .result-main {
       font-size: 1.05rem;
       color: #e8e8f0;
-      line-height: 1.7;
+    }
+    .result-ipa {
+      font-size: 1.05rem;
+      color: #93c5fd;
+      margin-top: 8px;
+    }
+    .result-credit {
+      font-size: 0.75rem;
+      color: #4e4e61;
+      margin-top: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
     .result-muted {
       font-size: 1rem;
@@ -323,24 +351,27 @@
 
   <script>
     const LANG_EMOJIS = {
-      "🇺🇸": "American English", "🇲🇦": "Amazigh", "🇸🇦": "Arabic",
-      "🇦🇺": "Australian English", "🇧🇷": "Brazilian Portuguese", "🇬🇧": "British English",
-      "🇧🇬": "Bulgarian", "🇨🇳": "Chinese", "🇭🇷": "Croatian",
-      "🇨🇿": "Czech", "🇩🇰": "Danish", "🇳🇱": "Dutch",
-      "🇪🇬": "Egyptian Arabic", "🇫🇮": "Finnish", "🇫🇷": "French",
-      "🇩🇪": "German", "🇬🇷": "Greek", "🇵🇸": "Hebrew",
-      "🇮🇳": "Hindi", "🇭🇺": "Hungarian", "🇮🇸": "Icelandic",
-      "🇮🇩": "Indonesian", "🇮🇶": "Iraqi Arabic", "🇮🇪": "Irish",
-      "🇮🇹": "Italian", "🇯🇵": "Japanese", "🇬🇱": "Kalaallisut",
-      "🇰🇷": "Korean", "🇱🇧": "Lebanese Arabic", "🇱🇾": "Libyan Arabic",
-      "🇩🇿": "Maghrebi Dialect", "🇲🇾": "Malay", "🇲🇽": "Mexican Spanish",
-      "🇳🇴": "Norwegian", "🇮🇷": "Persian", "🇵🇱": "Polish",
-      "🇵🇹": "Portuguese", "🇨🇦": "Quebec French", "🇷🇴": "Romanian",
-      "🇷🇺": "Russian", "🇷🇸": "Serbian", "🇪🇸": "Spanish",
-      "🇸🇩": "Sudanese Arabic", "🇸🇪": "Swedish", "🇵🇭": "Tagalog",
-      "🇹🇭": "Thai", "🇹🇷": "Turkish", "🇺🇦": "Ukrainian",
-      "🇵🇰": "Urdu", "🇻🇳": "Vietnamese"
+      "🇺🇸": "American English", "🇲🇦": "ⵜⴰ幕ⴰⵣⵉⵖⵜ", "🇸🇦": "العربية",
+      "🇦🇺": "Australian English", "🇧🇷": "Português Brasileiro", "🇬🇧": "British English",
+      "🇧🇬": "Български", "🇨🇳": "中文", "🇭🇷": "Hrvatski",
+      "🇨🇿": "Čeština", "🇩🇰": "Dansk", "🇳🇱": "Nederlands",
+      "🇪🇬": "اللهجة المصرية", "🇫🇮": "Suomi", "🇫🇷": "Français",
+      "🇩🇪": "Deutsch", "🇬🇷": "Ελληνικά", "🇵🇸": "עברית",
+      "🇮🇳": "हिन्दी", "🇭🇺": "Magyar", "🇮🇸": "Íslenska",
+      "🇮🇩": "Bahasa Indonesia", "🇮🇶": "اللهجة العراقية", "🇮🇪": "Gaeilge",
+      "🇮🇹": "Italiano", "🇯🇵": "日本語", "🇬🇱": "Kalaallisut",
+      "🇰🇷": "한국어", "🇱🇧": "اللهجة اللبنانية", "🇱🇾": "اللهجة الليبية",
+      "🇩🇿": "الدارجة المغربية", "🇲🇾": "Bahasa Melayu", "🇲🇽": "Español mexicano",
+      "🇳🇴": "Norsk", "🇮🇷": "فارسی", "🇵🇱": "Polski",
+      "🇵🇹": "Português", "🇨🇦": "Français Québécois", "🇷🇴": "Română",
+      "🇷🇺": "Русский", "🇷🇸": "Српски", "🇪🇸": "Español",
+      "🇸🇩": "اللهجة Sudanese", "🇸🇪": "Svenska", "🇵🇭": "Tagalog",
+      "🇹🇭": "ไทย", "🇹🇷": "Türkçe", "🇺🇦": "Українська",
+      "🇵🇰": "اردو", "🇻🇳": "Tiếng Việt"
     };
+    // Correction manuelle de la typo de l'initialisation du dictionnaire pour Tamazight
+    LANG_EMOJIS["🇲🇦"] = "ⵜⴰⵎⴰⵣⵉⵖⵜ";
+
     const LANG_TO_EMOJI = Object.fromEntries(Object.entries(LANG_EMOJIS).map(([k,v])=>[v,k]));
     const SUPPORTED = Object.values(LANG_EMOJIS).join(", ");
 
@@ -401,38 +432,46 @@
       if (btn) btn.classList.toggle("active", backThought);
     }
 
-    function formatMessageWithEmoji(emoji, text) {
-      const singleLineString = `${emoji} ${text}`;
-      
-      if (singleLineString.length > 45) {
-        return `${emoji}<br>${text}`;
-      } else {
-        return singleLineString;
-      }
+    // Nouvelle fonction HTML qui utilise le CSS flexbox adaptatif
+    function createRowHTML(className, emoji, text) {
+      return `
+        <div class="${className} result-row">
+          <span class="emoji-prefix">${emoji}</span>
+          <span class="text-content">${text}</span>
+        </div>
+      `;
     }
 
     async function callGemini(text, targetLang, mode, apiKey) {
       let prompt;
+      const writingSystemInstruction = "CRITICAL: You MUST write the translation or text using the native script/alphabet and natural writing system of that language. Crucially, if the language is 'ⵜⴰⵎⴰⵣⵉⵖⵜ' (Tamazight/Amazigh), you MUST write exclusively using the native Tifinagh script (e.g. ⴰ, ⴱ, ⴳ...). If the language is Arabic or an Arabic dialect, use ONLY Arabic script characters (مثل سلام), NEVER transliterate or use the Latin alphabet.";
+
       if (mode === "translate" && targetLang) {
         prompt =
-          `Do two things at once:\n` +
+          `Do three things at once:\n` +
           `1. Detect the language of this text from this list ONLY: ${SUPPORTED}. If not in list, write UNKNOWN.\n` +
-          `2. Translate the text to ${targetLang}.\n\n` +
-          `Reply in this exact format (2 lines only):\n` +
+          `2. Translate the text to ${targetLang}.\n` +
+          `3. Provide the exact phonetic transcription of that translation using the International Phonetic Alphabet (IPA).\n` +
+          `${writingSystemInstruction}\n\n` +
+          `Reply in this exact format (3 lines only):\n` +
           `LANG: <detected language>\n` +
-          `RESULT: <translation>\n\n` +
+          `RESULT: <translation>\n` +
+          `IPA: <international phonetic alphabet transcription>\n\n` +
           `Text: ${text}`;
       } else {
         const langInstruction = targetLang
           ? `in ${targetLang}`
           : "in the same language as the original text";
         prompt =
-          `Do two things at once:\n` +
+          `Do three things at once:\n` +
           `1. Detect the language of this text from this list ONLY: ${SUPPORTED}. If not in list, write UNKNOWN.\n` +
-          `2. As a humorous Discord bot, reveal the hidden true meaning of this message based on Discord/gaming clichés. Reply ${langInstruction}, short and funny.\n\n` +
-          `Reply in this exact format (2 lines only):\n` +
+          `2. As a humorous Discord bot, reveal the hidden true meaning of this message based on Discord/gaming clichés. Reply ${langInstruction}, short and funny.\n` +
+          `3. Only if a target language was specified, provide its exact International Phonetic Alphabet (IPA) transcription on the third line. Otherwise, leave the IPA line empty.\n` +
+          `${writingSystemInstruction}\n\n` +
+          `Reply in this exact format (3 lines only):\n` +
           `LANG: <detected language>\n` +
-          `RESULT: <hidden truth>\n\n` +
+          `RESULT: <hidden truth>\n` +
+          `IPA: <international phonetic alphabet transcription if target language requested, otherwise leave empty>\n\n` +
           `Text: ${text}`;
       }
 
@@ -469,6 +508,7 @@
 
       let sourceLang = null;
       let result = "";
+      let ipa = "";
 
       for (const line of lines) {
         if (line.startsWith("LANG:")) {
@@ -481,10 +521,12 @@
           }
         } else if (line.startsWith("RESULT:")) {
           result = line.replace("RESULT:", "").trim();
+        } else if (line.startsWith("IPA:")) {
+          ipa = line.replace("IPA:", "").trim();
         }
       }
 
-      return { sourceLang, result };
+      return { sourceLang, result, ipa };
     }
 
     function setOutput(html, isError = false) {
@@ -558,7 +600,6 @@
       if (!hasAction) missing.push("Translate or Reveal the Hidden Truth");
 
       if (missing.length > 0) {
-        // Garde la structure avec saut de ligne pour les oublis de saisie
         let errorMsg = "⚠️\nPlease,\n";
         if (missing.length === 1) {
           errorMsg += missing[0];
@@ -576,52 +617,14 @@
       try {
         const targetLang = selectedLang ? LANG_EMOJIS[selectedLang] : null;
 
+        // CAS 1 : Back Thought tout seul
         if (backThought && !selectedLang) {
           const { sourceLang, result } = await callGemini(text, null, "truth", apiKey);
           if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`, true); return; }
           setOutput(`<p class="result-main">${result}</p>`);
         }
 
+        // CAS 2 : Traduction classique seule
         else if (!backThought && selectedLang) {
-          const { sourceLang, result } = await callGemini(text, targetLang, "translate", apiKey);
-          if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`, true); return; }
-          const emoji = LANG_TO_EMOJI[sourceLang] ?? "🏳️";
-          if (sourceLang === targetLang) {
-            setOutput(`<p class="result-muted">${emoji} Already in ${sourceLang}.</p>`);
-          } else {
-            const formatted = formatMessageWithEmoji(emoji, result);
-            setOutput(`<p class="result-main">${formatted}</p>`);
-          }
-        }
-
-        else if (backThought && selectedLang) {
-          const { sourceLang, result: truthText } = await callGemini(text, null, "truth", apiKey);
-          if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`, true); return; }
-          const emoji = LANG_TO_EMOJI[sourceLang] ?? "🏳️";
-
-          if (sourceLang === targetLang) {
-            setOutput(
-              `<p class="result-muted">${emoji} Already in ${sourceLang}.</p>` +
-              `<p class="result-truth">${truthText}</p>`
-            );
-          } else {
-            const { result: translatedTruth } = await callGemini(truthText, targetLang, "translate", apiKey);
-            const formatted = formatMessageWithEmoji(emoji, translatedTruth);
-            setOutput(`<p class="result-main">${formatted}</p>`);
-          }
-        }
-
-      } catch (e) {
-        if (e.isGeminiCrash) {
-          // EXCEPTION : Affichage linéaire unique pour le crash Gemini
-          setOutput(`<p class="error-msg">⚠️ Please, Try Again</p>`, true);
-        } else {
-          setOutput(`<p class="error-msg">❌ ${e.message}</p>`, true);
-        }
-      } finally {
-        setButtonsState(false);
-      }
-    }
-  </script>
-</body>
-</html>
+          const { sourceLang, result, ipa } = await callGemini(text, targetLang, "translate", apiKey);
+          if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`, t
