@@ -338,7 +338,7 @@
       "🇨🇿": "Čeština", "🇩🇰": "Dansk", "🇳🇱": "Nederlands",
       "🇪🇬": "اللهجة المصرية", "🇫🇮": "Suomi", "🇫🇷": "Français",
       "🇩🇪": "Deutsch", "🇬🇷": "Ελληνικά", "🇵🇸": "עברית",
-      "🇮🇳": "हिन्दी", "🇭🇺": "Magyar", "🇮🇸": "Íslenska",
+      "🇮🇳": "हिन्दी", "🇭🇺": "Magyar", "🇮𝖘": "Íslenska",
       "🇮🇩": "Bahasa Indonesia", "🇮🇶": "اللهجة العراقية", "🇮🇪": "Gaeilge",
       "🇮🇹": "Italiano", "🇯🇵": "日本語", "🇬🇱": "Kalaallisut",
       "🇰🇷": "한국어", "🇱🇧": "اللهجة اللبنانية", "🇱🇾": "اللهجة الليبية",
@@ -421,7 +421,7 @@
 
     async function callGemini(text, targetLang, mode, apiKey) {
       let prompt;
-      const writingSystemInstruction = "CRITICAL: You MUST write the translation or text using the native script/alphabet and natural writing system of that language. Crucially, if the language is 'ⵜⴰⵎⴰⵣⵉⵖⵜ' (Tamazight/Amazigh), you MUST write exclusively using the native Tifinagh script (e.g. ⴰ, ⴱ, 疑...). If the language is Arabic or an Arabic dialect, use ONLY Arabic script characters (مثل سلام), NEVER transliterate or use the Latin alphabet.";
+      const writingSystemInstruction = "CRITICAL: You MUST write the translation or text using the native script/alphabet and natural writing system of that language. Crucially, if the language is 'ⵜⴰⵎⴰⵣⵉⵖⵜ' (Tamazight/Amazigh), you MUST write exclusively using the native Tifinagh script (e.g. ⴰ, ⴱ, ⴳ...). If the language is Arabic or an Arabic dialect, use ONLY Arabic script characters (مثل سلام), NEVER transliterate or use the Latin alphabet.";
 
       if (mode === "translate" && targetLang) {
         prompt =
@@ -443,12 +443,12 @@
           `Do three things at once:\n` +
           `1. Detect the language of this text from this list ONLY: ${SUPPORTED}.\n` +
           `2. As a humorous Discord bot, reveal the hidden true meaning of this message based on Discord/gaming clichés. Reply ${langInstruction}, short and funny.\n` +
-          `3. Only if a target language was specified, provide its exact International Phonetic Alphabet (IPA) transcription on the third line. Otherwise, leave the IPA line empty.\n` +
+          `3. Crucial: You MUST provide the exact phonetic transcription of that hidden truth text using the International Phonetic Alphabet (IPA) on the third line.\n` +
           `${writingSystemInstruction}\n\n` +
-          `Reply in this exact format (3 lines only):\n` +
+          `Reply in this exact format (3 lines only, do not include labels like 'Hidden Truth:' inside the content):\n` +
           `LANG: <detected language>\n` +
-          `RESULT: <hidden truth>\n` +
-          `IPA: <international phonetic alphabet transcription if target language requested, otherwise leave empty>\n\n` +
+          `RESULT: <hidden truth text>\n` +
+          `IPA: <international phonetic alphabet transcription>\n\n` +
           `Text: ${text}`;
       }
 
@@ -497,7 +497,8 @@
             }
           }
         } else if (line.startsWith("RESULT:")) {
-          result = line.replace("RESULT:", "").trim();
+          // Nettoyage au cas où l'IA s'obstine à écrire "Hidden Truth:"
+          result = line.replace("RESULT:", "").replace(/hidden truth\s*:\s*/i, "").trim();
         } else if (line.startsWith("IPA:")) {
           ipa = line.replace("IPA:", "").trim();
         }
@@ -594,7 +595,7 @@
       try {
         const targetLang = selectedLang ? LANG_EMOJIS[selectedLang] : null;
 
-        // CAS 1 : Back Thought seul
+        // CAS 1 : Back Thought seul (Affiche juste le texte de la vérité brute)
         if (backThought && !selectedLang) {
           const { sourceLang, result } = await callGemini(text, null, "truth", apiKey);
           if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`, true); return; }
@@ -612,18 +613,16 @@
           } else {
             const mainRowHTML = createRowHTML("result-main", emoji, result);
             const ipaRowHTML = createRowHTML("result-ipa", "🌐", ipa || "N/A");
-            
             setOutput(mainRowHTML + ipaRowHTML);
           }
         }
 
-        // CAS 3 : Back Thought + Traduction combinés
+        // CAS 3 : Back Thought + Traduction combinés (Avec Alphabet International fonctionnel !)
         else if (backThought && selectedLang) {
-          // Étape 1 : On récupère d'abord la vérité cachée (en demandant l'API de répondre directement dans la langue cible voulue)
           const { sourceLang, result: truthText, ipa } = await callGemini(text, targetLang, "truth", apiKey);
           if (!sourceLang) { setOutput(`<p class="error-msg">❌ Language Not Supported</p>`, true); return; }
-          
-          const emoji = LANG_TO_EMOJI[sourceLang] ?? "🏳️";
+
+        const emoji = LANG_TO_EMOJI[sourceLang] ?? "🏳️";
 
           if (sourceLang === targetLang) {
             setOutput(
@@ -633,7 +632,6 @@
           } else {
             const mainRowHTML = createRowHTML("result-main", emoji, truthText);
             const ipaRowHTML = createRowHTML("result-ipa", "🌐", ipa || "N/A");
-
             setOutput(mainRowHTML + ipaRowHTML);
           }
         }
