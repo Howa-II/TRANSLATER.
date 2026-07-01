@@ -344,22 +344,22 @@
 
   <script>
     const LANG_EMOJIS = {
-      "🇺🇸": "American English", "🇲🇦": "ⵜⴰⵎⴰⵣⵉⵖⵜ", "🇸🇦": "العربية",
+      "🇺🇸": "American English", "🇲🇦": "ⵜⴰⵎⴰざⵉⵖⵜ", "🇸🇦": "العربية",
       "🇦🇺": "Australian English", "🇧🇷": "Português brasileiro", "🇬🇧": "British English",
       "🇧🇬": "Български", "🇨🇳": "中文", "🇭🇷": "Hrvatski",
-      "🇨🇿": "Čeština", "🇩🇰": "Dansk", "🇳🇱": "Nederlands",
+      "🇨zech": "Čeština", "🇩🇰": "Dansk", "🇳🇱": "Nederlands",
       "🇪🇬": "اللهجة المصرية", "🇫🇮": "Suomi", "🇫🇷": "Français",
       "🇩🇪": "Deutsch", "🇬🇷": "Ελληνικά", "🇵🇸": "עברית",
       "🇮🇳": "हिन्दी", "🇭🇺": "Magyar", "🇮🇸": "Íslenska",
-      "🇮🇩": "Bahasa Indonesia", "🇮🇶": "اللهجة العراقية", "🇮🇪": "Gaeilge",
+      "🇮🇩": "Bahasa Indonesia", "🇮raq": "اللهجة العراقية", "🇮🇪": "Gaeilge",
       "🇮🇹": "Italiano", "🇯🇵": "日本語", "🇬🇱": "Kalaallisut",
-      "🇰🇷": "한국어", "🇱🇧": "اللهجة اللبنانية", "🇱🇾": "اللهجة الليبية",
+      "🇰r": "한국어", "🇱🇧": "اللهجة اللبنانية", "🇱🇾": "اللهجة الليبية",
       "🇩🇿": "الدارجة الجزائرية", "🇲🇾": "Bahasa Melayu", "🇲🇽": "Español mexicano",
       "🇳🇴": "Norsk", "🇮🇷": "فารسی", "🇵🇱": "Polski",
       "🇵🇹": "Português", "🇨🇦": "Français québécois", "🇷🇴": "Română",
       "🇷🇺": "Русский", "🇷🇸": "Српски", "🇪🇸": "Español",
       "🇸🇩": "اللهجة Sudanese", "🇸🇪": "Svenska", "🇵🇭": "Tagalog",
-      "🇹🇭": "ไทย", "🇹🇷": "Türkçe", "🇺🇦": "Українська",
+      "🇹🇭": "ไทย", "🇹r": "Türkçe", "🇺🇦": "Українська",
       "🇵🇰": "اردو", "🇻🇳": "Tiếng Việt"
     };
 
@@ -438,7 +438,7 @@
     async function callGemini(text, targetLang, mode, apiKey) {
       let prompt;
       const formatRules = "DO NOT use markdown formatting like asterisks (**). Do not write introduction sentences. Answer EXACTLY using the format lines below.";
-      const writingSystemInstruction = "CRITICAL: You MUST write the translation or text using the native script/alphabet and natural writing system of that language. Crucially, if the language is 'ⵜⴰⵎⴰⵣⵉⵖⵜ' (Tamazight/Amazigh), you MUST write exclusively using the native Tifinagh script. If the language is Arabic, use ONLY Arabic script characters.";
+      const writingSystemInstruction = "CRITICAL: You MUST write the translation or text using the native script/alphabet and natural writing system of that language. Crucially, if the language is 'ⵜⴰ幕ⴰⵣⵉⵖⵜ' (Tamazight/Amazigh), you MUST write exclusively using the native Tifinagh script. If the language is Arabic, use ONLY Arabic script characters.";
 
       if (mode === "translate" && targetLang) {
         prompt =
@@ -483,18 +483,24 @@
           }
         );
       } catch (netErr) {
-        const e = new Error("Network error"); e.isGeminiCrash = true; throw e;
+        const e = new Error("NETWORK_ERROR"); throw e;
       }
 
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        const msg = errData.error?.message || "Gemini API failure";
-        const e = new Error(msg); e.isGeminiCrash = true; throw e;
+        // Détection de la limite de quota (Statut 429)
+        if (response.status === 429) {
+          const e = new Error("QUOTA_ERROR"); throw e;
+        }
+        // Détection d'un problème d'API Key (Statuts 400 ou 403)
+        if (response.status === 400 || response.status === 403) {
+          const e = new Error("API_KEY_ERROR"); throw e;
+        }
+        const e = new Error("NETWORK_ERROR"); throw e;
       }
 
       const data = await response.json();
       let raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-      raw = raw.replace(/\*/g, "").trim(); // Nettoie immédiatement les astérisques de tout le texte brut
+      raw = raw.replace(/\*/g, "").trim();
 
       const lines = raw.split("\n");
       let sourceLang = null; let result = ""; let ipa = "";
@@ -522,16 +528,12 @@
         }
       }
 
-      // LA CORRECTION SUPER-ROBUSTE EST ICI :
-      // Si Gemini a ignoré nos préfixes ou a renvoyé un texte désordonné sans respecter les balises,
-      // on prend l'intégralité du texte généré plutôt que de planter avec une erreur.
       if (!hasPrefixMatch || !result) {
-        // Nettoyage rapide pour supprimer les restes de lignes techniques si présents
         result = raw.replace(/LANG:.*$/im, "")
                     .replace(/RESULT:/i, "")
                     .replace(/IPA:.*$/im, "")
                     .trim();
-        if (!result) result = raw; // Sécurité ultime
+        if (!result) result = raw;
       }
 
       return { sourceLang, result, ipa };
@@ -646,7 +648,15 @@
           }
         }
       } catch (e) {
-        setOutput(e.isGeminiCrash ? `<p class="error-msg">⚠️ Please, Try Again </p>` : `<p class="error-msg">❌ ${e.message}</p>`, true);
+        // Interceptions et tris des erreurs pour appliquer tes messages personnalisés
+        if (e.message === "QUOTA_ERROR") {
+          setOutput(`<p class="error-msg">⚠️ Please, your Plan Limit has been Reached</p>`, true);
+        } else if (e.message === "API_KEY_ERROR") {
+          setOutput(`<p class="error-msg">⚠️ Please, Check you GEMINI API KEY</p>`, true);
+        } else {
+          // Erreur réseau ou crash inattendu
+          setOutput(`<p class="error-msg">⚠️ Please, Try Again</p>`, true);
+        }
       } finally {
         setButtonsState(false);
       }
@@ -654,4 +664,3 @@
   </script>
 </body>
 </html>
-      
