@@ -27,9 +27,7 @@
       font-size: 2.2rem;
       font-weight: 700;
       letter-spacing: -0.03em;
-      background: linear-gradient(135deg, #a78bfa, #60a5fa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #FF0058; /* Changement de couleur demandé */
     }
     header p {
       color: #6b6b80;
@@ -163,16 +161,16 @@
     /* ── Bloc 4 : Target Languages ── */
     .lang-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(5, 1fr); /* Force 5 colonnes sur PC */
       gap: 10px;
     }
     .lang-btn {
-      padding: 12px 4px;
+      padding: 12px 2px;
       border-radius: 10px;
       border: 1.5px solid #2a2a35;
       background: #1e1e27;
       cursor: pointer;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       text-align: center;
       transition: all 0.12s;
       line-height: 1;
@@ -188,6 +186,18 @@
       margin-top: 14px;
       min-height: 1.2em;
       font-weight: 500;
+    }
+
+    /* ── Ajustement Responsive Mobile (Maintien strict des 5 colonnes) ── */
+    @media (max-width: 480px) {
+      .lang-grid {
+        grid-template-columns: repeat(5, 1fr); /* Force 5 colonnes sur Mobile également */
+        gap: 6px; /* Réduit l'espace pour éviter les débordements */
+      }
+      .lang-btn {
+        font-size: 1.25rem; /* Ajuste la taille de l'emoji pour le petit écran */
+        padding: 10px 0;
+      }
     }
 
     /* ── Bloc 5 : Action Buttons ── */
@@ -344,23 +354,56 @@
 
   <script>
     const LANG_EMOJIS = {
-      "🇺🇸": "American English", "🇲🇦": "ⵜⴰⵎⴰⵣⵉⵖⵜ", "🇸🇦": "العربية",
-      "🇦🇺": "Australian English", "🇧🇷": "Português Brasileiro", "🇬🇧": "British English",
-      "🇧🇬": "Български", "🇨🇳": "中文", "🇭🇷": "Hrvatski",
-      "🇨🇿": "Čeština", "🇩🇰": "Dansk", "🇳🇱": "Nederlands",
-      "🇪🇬": "اللهجة المصرية", "🇫🇮": "Suomi", "🇫🇷": "Français",
-      "🇩🇪": "Deutsch", "🇬🇷": "Ελληνικά", "🇵🇸": "עברית",
-      "🇮🇳": "हिन्दी", "🇭🇺": "Magyar", "🇮🇸": "Íslenska",
-      "🇮🇩": "Bahasa Indonesia", "🇮🇶": "اللهجة العراقية", "🇮🇪": "Gaeilge",
-      "🇮🇹": "Italiano", "🇯🇵": "日本語", "🇬🇱": "Kalaallisut",
-      "🇰🇷": "한국어", "🇱🇧": "اللهجة اللبنانية", "🇱🇾": "اللهجة الليبية",
-      "🇩🇿": "الدارجة المغربية", "🇲🇾": "Bahasa Melayu", "🇲🇽": "Español Mexicano",
-      "🇳🇴": "Norsk", "🇮🇷": "فارسي", "🇵🇱": "Polski",
-      "🇵🇹": "Português", "🇨🇦": "Français Québécois", "🇷🇴": "Română",
-      "🇷🇺": "Русский", "🇷🇸": "Српски", "🇪🇸": "Español",
-      "🇸🇩": "اللهجة السودانية", "🇸🇪": "Svenska", "🇵🇭": "Tagalog",
-      "🇹🇭": "ไทย", "🇹🇷": "Türkçe", "🇺🇦": "Українська",
-      "🇵🇰": "اردو", "🇻🇳": "Tiếng Việt"
+      "🇺🇸": "American English",
+      "🇲🇦": "ⵜⴰⵎⴰⵣⵉⵖⵜ",
+      "🇦🇺": "Australian English",
+      "🇮🇩": "Bahasa Indonesia",
+      "🇲🇾": "Bahasa Melayu",
+      "🇬🇧": "British English",
+      "🇧🇷": "Português Brasileiro",
+      "🇨🇿": "Čeština",
+      "🇩🇰": "Dansk",
+      "🇩🇪": "Deutsch",
+      "🇪🇸": "Español",
+      "🇲🇽": "Español Mexicano",
+      "🇫🇷": "Français",
+      "🇨🇦": "Français Québécois",
+      "🇮🇪": "Gaeilge",
+      "🇭🇷": "Hrvatski",
+      "🇮🇹": "Italiano",
+      "🇬🇱": "Kalaallisut",
+      "🇭🇺": "Magyar",
+      "🇳🇱": "Nederlands",
+      "🇳🇴": "Norsk",
+      "🇵🇱": "Polski",
+      "🇵🇹": "Português",
+      "🇷🇴": "Română",
+      "🇫🇮": "Suomi",
+      "🇸🇪": "Svenska",
+      "🇵🇭": "Tagalog",
+      "🇻🇳": "Tiếng Việt",
+      "🇹🇷": "Türkçe",
+      "🇵🇰": "اردو",
+      "🇸🇦": "العربية",
+      "🇩🇿": "الدارجة المغربية",
+      "🇪🇬": "اللهجة المصرية",
+      "🇮🇶": "اللهجة العراقية",
+      "🇱🇧": "اللهجة اللبنانية",
+      "🇱🇾": "اللهجة الليبية",
+      "🇸🇩": "اللهجة السودانية",
+      "🇧🇬": "Български",
+      "🇷🇸": "Српски",
+      "🇺🇦": "Українська",
+      "🇷🇺": "Русский",
+      "🇵🇸": "עברית",
+      "🇮🇷": "فارسي",
+      "🇮🇳": "हिन्दी",
+      "🇹🇭": "ไทย",
+      "🇮🇸": "Íslenska",
+      "🇬🇷": "Ελληνικά",
+      "🇨🇳": "简体中文",
+      "🇯🇵": "日本語",
+      "🇰🇷": "한국어"
     };
 
     const LANG_TO_EMOJI = Object.fromEntries(Object.entries(LANG_EMOJIS).map(([k,v])=>[v,k]));
@@ -438,7 +481,7 @@
     async function callGemini(text, targetLang, mode, apiKey) {
       let prompt;
       const formatRules = "DO NOT use markdown formatting like asterisks (**). Do not write introduction sentences. Answer EXACTLY using the format lines below.";
-      const writingSystemInstruction = "CRITICAL: You MUST write the translation or text using the native script/alphabet and natural writing system of that language. Crucially, if the language is 'ⵜⴰ幕ⴰⵣⵉⵖⵜ' (Tamazight/Amazigh), you MUST write exclusively using the native Tifinagh script. If the language is Arabic, use ONLY Arabic script characters.";
+      const writingSystemInstruction = "CRITICAL: You MUST write the translation or text using the native script/alphabet and natural writing system of that language. Crucially, if the language is 'ⵜⴰⵎⴰⵣⵉⵖⵜ' (Tamazight/Amazigh), you MUST write exclusively using the native Tifinagh script. If the language is Arabic, use ONLY Arabic script characters.";
 
       if (mode === "translate" && targetLang) {
         prompt =
@@ -487,11 +530,9 @@
       }
 
       if (!response.ok) {
-        // Détection de la limite de quota (Statut 429)
         if (response.status === 429) {
           const e = new Error("QUOTA_ERROR"); throw e;
         }
-        // Détection d'un problème d'API Key (Statuts 400 ou 403)
         if (response.status === 400 || response.status === 403) {
           const e = new Error("API_KEY_ERROR"); throw e;
         }
@@ -648,13 +689,11 @@
           }
         }
       } catch (e) {
-        // Interceptions et tris des erreurs pour appliquer tes messages personnalisés
         if (e.message === "QUOTA_ERROR") {
           setOutput(`<p class="error-msg">⚠️ Please, your Plan Limit has been Reached</p>`, true);
         } else if (e.message === "API_KEY_ERROR") {
           setOutput(`<p class="error-msg">⚠️ Please, Check you GEMINI API KEY</p>`, true);
         } else {
-          // Erreur réseau ou crash inattendu
           setOutput(`<p class="error-msg">⚠️ Please, Try Again</p>`, true);
         }
       } finally {
@@ -664,3 +703,4 @@
   </script>
 </body>
 </html>
+     
