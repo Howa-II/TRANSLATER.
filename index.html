@@ -79,13 +79,34 @@
     }
     #api-key:focus { border-color: #a78bfa; }
 
-    /* ── Bloc 2 : Message Input + Compteur ── */
-    .textarea-container {
+    /* ── Bloc 2 : Message Input Numéroté + Compteur ── */
+    .textarea-wrapper {
+      position: relative;
       display: flex;
-      flex-direction: column;
+      background: #121217;
+      border: 1.5px solid #2a2a35;
+      border-radius: 10px;
+      padding: 12px;
+      min-height: 120px;
     }
+    .textarea-wrapper:focus-within {
+      border-color: #a78bfa;
+    }
+    
+    /* Gouttière des numéros de ligne */
+    .line-numbers {
+      text-align: right;
+      padding-right: 12px;
+      color: #4e4e61;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      user-select: none;
+      white-space: pre;
+    }
+
     textarea {
-      width: 100%;
+      flex: 1;
       background: transparent;
       border: none;
       outline: none;
@@ -309,15 +330,16 @@
 
     <div class="block">
       <div class="block-title">Provide a Message</div>
-      <div class="textarea-container">
-        <textarea id="text-input" rows="4" placeholder="292 . . ." maxlength="292" oninput="updateCounter()"></textarea>
-        <div class="textarea-footer">
-          <div class="char-counter" id="char-counter">0 / 292</div>
-        </div>
-        <div class="limit-warning-zone" id="limit-warning-zone">
-          <hr class="limit-warning-line" />
-          <div class="limit-warning-text">❌ It is Impossible to Enter More than 292 Characters</div>
-        </div>
+      <div class="textarea-wrapper">
+        <div class="line-numbers" id="line-numbers">1</div>
+        <textarea id="text-input" placeholder="292 . . ." maxlength="292" oninput="handleInput()"></textarea>
+      </div>
+      <div class="textarea-footer">
+        <div class="char-counter" id="char-counter">0 / 292</div>
+      </div>
+      <div class="limit-warning-zone" id="limit-warning-zone">
+        <hr class="limit-warning-line" />
+        <div class="limit-warning-text">❌ It is Impossible to Enter More than 292 Characters</div>
       </div>
     </div>
 
@@ -349,7 +371,7 @@
   <script>
     const LANG_EMOJIS = {
       "🇺🇸": "American English",
-      "🇲🇦": "ⵜⴰⵎⴰⵣⵉⵖⵜ",
+      "🇲🇦": "ⵜⴰ幕ⴰⵣⵉⵖⵜ",
       "🇦🇺": "Australian English",
       "🇮🇩": "Bahasa Indonesia",
       "🇲🇾": "Bahasa Melayu",
@@ -400,6 +422,8 @@
       "🇰🇷": "한국어"
     };
 
+    LANG_EMOJIS["🇲🇦"] = "ⵜⴰⵎⴰⵣⵉⵖⵜ";
+
     const LANG_TO_EMOJI = Object.fromEntries(Object.entries(LANG_EMOJIS).map(([k,v])=>[v,k]));
     const SUPPORTED = Object.values(LANG_EMOJIS).join(", ");
 
@@ -419,12 +443,15 @@
       });
     }
 
-    function updateCounter() {
+    // Gestion de la saisie + mise à jour des compteurs et numéros de lignes
+    function handleInput() {
       const textarea = document.getElementById("text-input");
       const counter = document.getElementById("char-counter");
       const warningZone = document.getElementById("limit-warning-zone");
-      if (!textarea || !counter || !warningZone) return;
+      const lineNumbersDiv = document.getElementById("line-numbers");
+      if (!textarea || !counter || !warningZone || !lineNumbersDiv) return;
 
+      // 1. Compteur de caractères
       const currentLength = textarea.value.length;
       counter.textContent = `${currentLength} / 292`;
 
@@ -435,6 +462,15 @@
         counter.classList.remove("limit-reached");
         warningZone.classList.remove("visible");
       }
+
+      // 2. Génération automatique des numéros de lignes
+      const lines = textarea.value.split('\n');
+      const lineCount = lines.length;
+      let numberString = '';
+      for (let i = 1; i <= lineCount; i++) {
+        numberString += i + '\n';
+      }
+      lineNumbersDiv.textContent = numberString.trim();
     }
 
     function selectLang(emoji) {
@@ -476,17 +512,18 @@
       let prompt;
       const formatRules = "DO NOT use markdown formatting like asterisks (**). Do not write introduction sentences. Answer EXACTLY using the format lines below.";
       const writingSystemInstruction = "CRITICAL: You MUST write the translation or text using the native script/alphabet and natural writing system of that language. Crucially, if the language is 'ⵜⴰⵎⴰⵣⵉⵖⵜ' (Tamazight/Amazigh), you MUST write exclusively using the native Tifinagh script. If the language is Arabic, use ONLY Arabic script characters.";
+      const strictLangRule = `CRITICAL LANGUAGE DETECTION: Detect the language of the Text. If the language matches EXACTLY one of the names in this list, return that name on the LANG: line: [${SUPPORTED}]. If the language is NOT in this list (for example Latin, Esperanto, etc.), you MUST write EXACTLY 'LANG: UNKNOWN'. Do not guess a neighboring language.`;
 
       if (mode === "translate" && targetLang) {
         prompt =
           `Do three things at once:\n` +
-          `1. Detect the language of this text from this list ONLY: ${SUPPORTED}.\n` +
+          `1. ${strictLangRule}\n` +
           `2. Translate the text to ${targetLang}.\n` +
           `3. Provide the exact phonetic transcription of that translation using the International Phonetic Alphabet (IPA).\n` +
           `${writingSystemInstruction}\n` +
           `${formatRules}\n\n` +
           `Reply in this exact format (3 lines only):\n` +
-          `LANG: <detected language>\n` +
+          `LANG: <detected language or UNKNOWN>\n` +
           `RESULT: <translation>\n` +
           `IPA: <international phonetic alphabet transcription>\n\n` +
           `Text: ${text}`;
@@ -494,13 +531,13 @@
         const langInstruction = targetLang ? `in ${targetLang}` : "in the same language as the original text";
         prompt =
           `Do three things at once:\n` +
-          `1. Detect the language of this text from this list ONLY: ${SUPPORTED}.\n` +
+          `1. ${strictLangRule}\n` +
           `2. As a humorous Discord bot, reveal the hidden true meaning of this message based on Discord/gaming clichés. Reply ${langInstruction}, short and funny.\n` +
           `3. Crucial: You MUST provide the exact phonetic transcription of that hidden truth text using the International Phonetic Alphabet (IPA) on the third line.\n` +
           `${writingSystemInstruction}\n` +
           `${formatRules}\n\n` +
           `Reply in this exact format (3 lines only):\n` +
-          `LANG: <detected language>\n` +
+          `LANG: <detected language or UNKNOWN>\n` +
           `RESULT: <hidden truth text>\n` +
           `IPA: <international phonetic alphabet transcription>\n\n` +
           `Text: ${text}`;
@@ -515,7 +552,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { temperature: 0.3 }
+              generationConfig: { temperature: 0.1 }
             })
           }
         );
@@ -547,8 +584,12 @@
         if (cleanLine.toUpperCase().startsWith("LANG:")) {
           hasPrefixMatch = true;
           const detected = cleanLine.substring(5).trim();
-          for (const lang of Object.values(LANG_EMOJIS)) {
-            if (lang.toLowerCase() === detected.toLowerCase()) { sourceLang = lang; break; }
+          if (detected.toUpperCase() === "UNKNOWN") {
+            sourceLang = null;
+          } else {
+            for (const lang of Object.values(LANG_EMOJIS)) {
+              if (lang.toLowerCase() === detected.toLowerCase()) { sourceLang = lang; break; }
+            }
           }
         } else if (cleanLine.toUpperCase().startsWith("RESULT:")) {
           hasPrefixMatch = true;
@@ -618,7 +659,7 @@
         backThought = false;
         const btBtn = document.getElementById("bt-btn");
         if (btBtn) btBtn.classList.remove("active");
-        updateCounter(); hideOutput();
+        handleInput(); hideOutput(); 
       }, 1200); 
     }
 
@@ -675,7 +716,7 @@
           }
         }
         else if (backThought && selectedLang) {
-          const { sourceLang, result: truthText, ipa } = await callGemini(text, targetLang, "truth", apiKey);
+          const { sourceLang, result: truthText, ipa = "" } = await callGemini(text, targetLang, "truth", apiKey);
           if (!sourceLang) {
             setOutput(`<p class="error-msg">⚠️\n  Language Not Registered</p>`, true);
             return;
