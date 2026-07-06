@@ -324,7 +324,7 @@
     <div class="block">
       <div class="block-title">GEMINI API KEY</div>
       <div class="key-input-container">
-        <input type="password" id="api-key" placeholder="Enter your GEMINI API KEY" autocomplete="off" />
+        <input type="password" id="api-key" placeholder="Provide your GEMINI API KEY" autocomplete="off" />
       </div>
     </div>
 
@@ -339,7 +339,7 @@
       </div>
       <div class="limit-warning-zone" id="limit-warning-zone">
         <hr class="limit-warning-line" />
-        <div class="limit-warning-text" id="limit-warning-text">⚠️\nPlease, it is Impossible to Enter More than 292 Characters</div>
+        <div class="limit-warning-text" id="limit-warning-text">⚠️\nPlease, it is Impossible to Provide More than 292 Characters."</div>
       </div>
     </div>
 
@@ -520,7 +520,7 @@
         const warningZone = document.getElementById("limit-warning-zone");
         const warningText = document.getElementById("limit-warning-text");
         if (warningZone && warningText) {
-          warningText.textContent = "⚠️\nPlease, it is Impossible to Enter a World More than a Line";
+          warningText.textContent = "⚠️\nPlease, it is Impossible to Provide a World to Exceed a Single Line";
           warningZone.classList.add("visible");
         }
       }
@@ -556,11 +556,11 @@
       // 3. Alertes
       if (currentLength >= 292) {
         counter.classList.add("limit-reached");
-        warningText.textContent = "⚠️\nPlease, it is Impossible to Enter More than 292 Characters";
+        warningText.textContent = "⚠️\nPlease, it is Impossible to Provide More than 292 Characters";
         warningZone.classList.add("visible");
       } else if (wordTooLong) {
         counter.classList.remove("limit-reached");
-        warningText.textContent = "⚠️\nPlease, it is Impossible to Enter a World More than a Line";
+        warningText.textContent = "⚠️\nPlease, it is Impossible to Provide a World to Exceed a Single Line";
         warningZone.classList.add("visible");
       } else {
         counter.classList.remove("limit-reached");
