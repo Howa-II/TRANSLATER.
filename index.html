@@ -491,6 +491,41 @@
       return { totalRows, wordTooLong };
     }
 
+    // Vérifie si un mot donné dépasserait la largeur disponible du textarea
+    function isWordOverflow(word, textarea) {
+      const style = window.getComputedStyle(textarea);
+      const font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      const paddingLeft = parseFloat(style.paddingLeft) || 0;
+      const paddingRight = parseFloat(style.paddingRight) || 0;
+      const availableWidth = textarea.clientWidth - paddingLeft - paddingRight;
+      return getTextWidth(word, font) > availableWidth;
+    }
+
+    // Bloque la frappe d'un caractère si le mot en cours dépasserait la ligne (comme la limite de 292 caractères).
+    // Un espace (ou saut de ligne) est toujours autorisé pour terminer le mot et continuer.
+    function handleWordBlock(e) {
+      if (!e.inputType || !e.inputType.startsWith("insert")) return;
+      const data = e.data;
+      if (!data || data === " " || data === "\n") return;
+
+      const textarea = e.target;
+      const cursorPos = textarea.selectionStart;
+      const value = textarea.value;
+      let wordStart = cursorPos;
+      while (wordStart > 0 && value[wordStart - 1] !== " " && value[wordStart - 1] !== "\n") wordStart--;
+      const currentWord = value.substring(wordStart, cursorPos) + data;
+
+      if (isWordOverflow(currentWord, textarea)) {
+        e.preventDefault();
+        const warningZone = document.getElementById("limit-warning-zone");
+        const warningText = document.getElementById("limit-warning-text");
+        if (warningZone && warningText) {
+          warningText.textContent = "❌ Please, It is Impossible to Enter a World More than a Line";
+          warningZone.classList.add("visible");
+        }
+      }
+    }
+
     // Gestion de la saisie + mise à jour des compteurs et numéros de lignes
     function handleInput() {
       const textarea = document.getElementById("text-input");
@@ -525,7 +560,7 @@
         warningZone.classList.add("visible");
       } else if (wordTooLong) {
         counter.classList.remove("limit-reached");
-        warningText.textContent = "❌ Please, It Impossible to Enter a World More than a Line";
+        warningText.textContent = "❌ Please, It is Impossible to Enter a World More than a Line";
         warningZone.classList.add("visible");
       } else {
         counter.classList.remove("limit-reached");
@@ -534,6 +569,11 @@
     }
 
     window.addEventListener("resize", handleInput);
+
+    const textInputEl = document.getElementById("text-input");
+    if (textInputEl) {
+      textInputEl.addEventListener("beforeinput", handleWordBlock);
+    }
 
     function selectLang(emoji) {
       if (selectedLang === emoji) {
@@ -810,3 +850,4 @@
   </script>
 </body>
 </html>
+  
