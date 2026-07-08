@@ -77,7 +77,7 @@
       outline: none;
       transition: border-color 0.15s;
     }
-    #api-key:focus { border-color: #a78bfa; }
+    #api-key:focus { border-color: #5865F2; }
 
     /* ── Bloc 2 : Message Input Numéroté + Compteur ── */
     .textarea-wrapper {
@@ -90,7 +90,7 @@
       min-height: 120px;
     }
     .textarea-wrapper:focus-within {
-      border-color: #a78bfa;
+      border-color: #5865F2;
     }
 
     /* Gouttière des numéros de ligne */
@@ -178,9 +178,9 @@
       font-family: inherit;
     }
     #bt-btn.active {
-      border-color: #a78bfa;
-      background: rgba(167,139,250,0.12);
-      color: #a78bfa;
+      border-color: #5865F2;
+      background: rgba(88, 101, 242, 0.12);
+      color: #5865F2;
     }
 
     /* ── Bloc 4 : Target Languages ── */
@@ -202,8 +202,8 @@
     }
     .lang-btn:hover { border-color: #3a3a50; background: #22222e; }
     .lang-btn.selected {
-      border-color: #60a5fa;
-      background: rgba(96,165,250,0.12);
+      border-color: #5865F2;
+      background: rgba(88, 101, 242, 0.12);
     }
     #selected-lang-label {
       font-size: 0.85rem;
@@ -632,32 +632,45 @@ It is Impossible to Provide More than 292 Characters</div>
 
       if (mode === "translate" && targetLang) {
         prompt =
-          `Do three things at once:\n` +
+          `Do several things at once:\n` +
           `1. ${strictLangRule}\n` +
           `2. Translate the text to ${targetLang}.\n` +
           `3. Provide the exact phonetic transcription of that translation using the International Phonetic Alphabet (IPA).\n` +
+          `4. Write the short caption phrase "Translated in ${targetLang}" but fully translated and worded naturally in ${targetLang} itself (not in English). Capitalize the first letter of each important word (Title Case), like "Revealed and Translated in American English".\n` `5. Write the short caption phrase "Already in ${targetLang}" but fully translated and worded naturally in ${targetLang} itself (not in English). Capitalize the first letter of each important word (Title Case).\n` +
+          `5. Write the short caption phrase "Already in ${targetLang}" but fully translated and worded naturally in ${targetLang} itself (not in English). Capitalize the first letter of each important word (Title Case).\n` +
           `${typoToleranceInstruction}\n` +
           `${writingSystemInstruction}\n` +
           `${formatRules}\n\n` +
-          `Reply in this exact format (3 lines only):\n` +
+          `Reply in this exact format (5 lines only):\n` +
           `LANG: <detected language or UNKNOWN>\n` +
           `RESULT: <translation>\n` +
-          `IPA: <international phonetic alphabet transcription>\n\n` +
+          `IPA: <international phonetic alphabet transcription>\n` +
+          `CAPTION: <"Translated in ${targetLang}" fully written in ${targetLang}>\n` +
+          `ALREADY_CAPTION: <"Already in ${targetLang}" fully written in ${targetLang}>\n\n` +
           `Text: ${text}`;
       } else {
         const langInstruction = targetLang ? `in ${targetLang}` : "in the same language as the original text";
+        const captionLine = targetLang
+          ? `CAPTION: <"Revealed and Translated in ${targetLang}" fully written in ${targetLang}>\nALREADY_CAPTION: <"Already in ${targetLang}" fully written in ${targetLang}>`
+          : `CAPTION: <the word "Revealed" fully translated and worded naturally in the SAME language as the detected original text (line 1 above)>`;
+        const captionInstruction = targetLang
+          ? `4. Write the short caption phrase "Revealed and Translated in ${targetLang}" but fully translated and worded naturally in ${targetLang} itself (not in English). Capitalize the first letter of each important word (Title Case), like "Revealed and Translated in American English".\n` +
+            `5. Write the short caption phrase "Already in ${targetLang}" but fully translated and worded naturally in ${targetLang} itself (not in English). Capitalize the first letter of each important word (Title Case).\n`
+          : `4. Write the single word "Revealed" but fully translated and worded naturally in the SAME language as the detected original text (not in English). Capitalize its first letter.\n`;
         prompt =
-          `Do three things at once:\n` +
+          `Do several things at once:\n` +
           `1. ${strictLangRule}\n` +
           `2. As a humorous Discord bot, reveal the hidden true meaning of this message based on Discord/gaming clichés. Reply ${langInstruction}, short and funny.\n` +
           `3. Crucial: You MUST provide the exact phonetic transcription of that hidden truth text using the International Phonetic Alphabet (IPA) on the third line.\n` +
+          captionInstruction +
           `${typoToleranceInstruction}\n` +
           `${writingSystemInstruction}\n` +
           `${formatRules}\n\n` +
-          `Reply in this exact format (3 lines only):\n` +
+          `Reply in this exact format:\n` +
           `LANG: <detected language or UNKNOWN>\n` +
           `RESULT: <hidden truth text>\n` +
-          `IPA: <international phonetic alphabet transcription>\n\n` +
+          `IPA: <international phonetic alphabet transcription>\n` +
+          `${captionLine}\n\n` +
           `Text: ${text}`;
       }
 
@@ -693,7 +706,7 @@ It is Impossible to Provide More than 292 Characters</div>
       raw = raw.replace(/\*/g, "").trim();
 
       const lines = raw.split("\n");
-      let sourceLang = null; let result = ""; let ipa = "";
+      let sourceLang = null; let result = ""; let ipa = ""; let caption = ""; let alreadyCaption = "";
       let hasPrefixMatch = false;
 
       for (let line of lines) {
@@ -719,6 +732,10 @@ It is Impossible to Provide More than 292 Characters</div>
         } else if (cleanLine.toUpperCase().startsWith("IPA:")) {
           hasPrefixMatch = true;
           ipa = cleanLine.substring(4).trim();
+        } else if (cleanLine.toUpperCase().startsWith("ALREADY_CAPTION:")) {
+          alreadyCaption = cleanLine.substring(17).trim();
+        } else if (cleanLine.toUpperCase().startsWith("CAPTION:")) {
+          caption = cleanLine.substring(8).trim();
         }
       }
 
@@ -730,7 +747,7 @@ It is Impossible to Provide More than 292 Characters</div>
         if (!result) result = raw;
       }
 
-      return { sourceLang, result, ipa };
+      return { sourceLang, result, ipa, caption, alreadyCaption };
     }
 
     function setOutput(html, isError = false) {
@@ -808,15 +825,15 @@ It is Impossible to Provide More than 292 Characters</div>
         const targetLang = selectedLang ? LANG_EMOJIS[selectedLang] : null;
 
         if (backThought && !selectedLang) {
-          const { sourceLang, result } = await callGemini(text, null, "truth", apiKey);
+          const { sourceLang, result, caption } = await callGemini(text, null, "truth", apiKey);
           if (!sourceLang) {
             setOutput(`<p class="error-msg">⚠️\nLanguage Not Registered</p>`, true);
             return;
           }
-          setOutput(`<p class="result-main">${result}</p><p class="result-caption">Revealed</p>`);
+          setOutput(`<p class="result-main">${result}</p><p class="result-caption">🔎 ${caption || "Revealed"}</p>`);
         }
         else if (!backThought && selectedLang) {
-          const { sourceLang, result, ipa } = await callGemini(text, targetLang, "translate", apiKey);
+          const { sourceLang, result, ipa, caption, alreadyCaption } = await callGemini(text, targetLang, "translate", apiKey);
           if (!sourceLang) {
             setOutput(`<p class="error-msg">⚠️\nLanguage Not Registered</p>`, true);
             return;
@@ -824,18 +841,18 @@ It is Impossible to Provide More than 292 Characters</div>
           
           const emoji = LANG_TO_EMOJI[sourceLang];
           if (sourceLang === targetLang) {
-            setOutput(`<p class="result-muted">${emoji} Already in ${sourceLang}.</p>`);
+            setOutput(`<p class="result-muted">${emoji} ${alreadyCaption || `Already in ${sourceLang}.`}</p>`);
           } else {
             let htmlResult = createRowHTML("result-main", emoji, result || "Translation error");
             if (ipa && ipa.toUpperCase() !== "N/A" && ipa.trim() !== "") {
               htmlResult += createRowHTML("result-ipa", "🌐", ipa);
             }
-            htmlResult += `<p class="result-caption">${selectedLang} Translated in ${targetLang}</p>`;
+            htmlResult += `<p class="result-caption">${selectedLang} ${caption || `Translated in ${targetLang}`}</p>`;
             setOutput(htmlResult);
           }
         }
         else if (backThought && selectedLang) {
-          const { sourceLang, result: truthText, ipa = "" } = await callGemini(text, targetLang, "truth", apiKey);
+          const { sourceLang, result: truthText, ipa = "", caption, alreadyCaption } = await callGemini(text, targetLang, "truth", apiKey);
           if (!sourceLang) {
             setOutput(`<p class="error-msg">⚠️\nLanguage Not Registered</p>`, true);
             return;
@@ -843,13 +860,13 @@ It is Impossible to Provide More than 292 Characters</div>
           
           const emoji = LANG_TO_EMOJI[sourceLang];
           if (sourceLang === targetLang) {
-            setOutput(`<p class="result-muted">${emoji} Already in ${sourceLang}.</p><p class="result-truth">${truthText}</p>`);
+            setOutput(`<p class="result-muted">${emoji} ${alreadyCaption || `Already in ${sourceLang}.`}</p><p class="result-truth">${truthText}</p>`);
           } else {
             let htmlResult = createRowHTML("result-main", emoji, truthText || "Error processing truth");
             if (ipa && ipa.toUpperCase() !== "N/A" && ipa.trim() !== "") {
               htmlResult += createRowHTML("result-ipa", "🌐", ipa);
             }
-            htmlResult += `<p class="result-caption">${selectedLang} Revealed and Translated in ${targetLang}</p>`;
+            htmlResult += `<p class="result-caption">🔎 ${selectedLang} ${caption || `Revealed and Translated in ${targetLang}`}</p>`;
             setOutput(htmlResult);
           }
         }
@@ -868,4 +885,3 @@ It is Impossible to Provide More than 292 Characters</div>
   </script>
 </body>
 </html>
-        
