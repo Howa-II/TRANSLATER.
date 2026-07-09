@@ -207,7 +207,7 @@
     }
     #selected-lang-label {
       font-size: 0.85rem;
-      color: #60a5fa;
+      color: #5865F2;
       margin-top: 14px;
       min-height: 1.2em;
       font-weight: 500;
@@ -554,7 +554,7 @@ It is Impossible to Provide More than 292 Characters</div>
         wordTooLong = wordTooLong || tooLong;
         let numberString = '';
         for (let i = 1; i <= totalRows; i++) {
-          numberString += i + '\n';
+          numberString += i + '.\n';
         }
         lineNumbersDiv.textContent = numberString.trim();
       }
@@ -636,8 +636,8 @@ It is Impossible to Provide More than 292 Characters</div>
           `1. ${strictLangRule}\n` +
           `2. Translate the text to ${targetLang}.\n` +
           `3. Provide the exact phonetic transcription of that translation using the International Phonetic Alphabet (IPA).\n` +
-          `4. Write the short caption phrase "Translated in ${targetLang}" but fully translated and worded naturally in ${targetLang} itself (not in English). Capitalize the first letter of each important word (Title Case), like "Revealed and Translated in American English".\n` `5. Write the short caption phrase "Already in ${targetLang}" but fully translated and worded naturally in ${targetLang} itself (not in English). Capitalize the first letter of each important word (Title Case).\n` +
-          `5. Write the short caption phrase "Already in ${targetLang}" but fully translated and worded naturally in ${targetLang} itself (not in English). Capitalize the first letter of each important word (Title Case).\n` +
+          `4. Write the short caption phrase "Translated in ${targetLang}" but fully translated and worded naturally in ${targetLang} itself (not in English). Capitalize ONLY the first letter of the word meaning "Translated" and the first letter of the language name (${targetLang}); keep every other word (like "in") in lowercase. Example style: "Translated in American English".\n` +
+          `5. Write the short caption phrase "Already in ${targetLang}" but fully translated and worded naturally in ${targetLang} itself (not in English). Capitalize ONLY the first letter of the word meaning "Already"/"Still" and the first letter of the language name (${targetLang}); keep every other word (like "in") in lowercase.\n` +
           `${typoToleranceInstruction}\n` +
           `${writingSystemInstruction}\n` +
           `${formatRules}\n\n` +
@@ -654,8 +654,8 @@ It is Impossible to Provide More than 292 Characters</div>
           ? `CAPTION: <"Revealed and Translated in ${targetLang}" fully written in ${targetLang}>\nALREADY_CAPTION: <"Already in ${targetLang}" fully written in ${targetLang}>`
           : `CAPTION: <the word "Revealed" fully translated and worded naturally in the SAME language as the detected original text (line 1 above)>`;
         const captionInstruction = targetLang
-          ? `4. Write the short caption phrase "Revealed and Translated in ${targetLang}" but fully translated and worded naturally in ${targetLang} itself (not in English). Capitalize the first letter of each important word (Title Case), like "Revealed and Translated in American English".\n` +
-            `5. Write the short caption phrase "Already in ${targetLang}" but fully translated and worded naturally in ${targetLang} itself (not in English). Capitalize the first letter of each important word (Title Case).\n`
+          ? `4. Write the short caption phrase "Revealed and Translated in ${targetLang}" but fully translated and worded naturally in ${targetLang} itself (not in English). Capitalize ONLY the first letter of the word meaning "Revealed", the first letter of the word meaning "Translated", and the first letter of the language name (${targetLang}); keep every other word (like "and", "in") in lowercase. Example style: "Revealed and Translated in American English".\n` +
+            `5. Write the short caption phrase "Already in ${targetLang}" but fully translated and worded naturally in ${targetLang} itself (not in English). Capitalize ONLY the first letter of the word meaning "Already"/"Still" and the first letter of the language name (${targetLang}); keep every other word (like "in") in lowercase.\n`
           : `4. Write the single word "Revealed" but fully translated and worded naturally in the SAME language as the detected original text (not in English). Capitalize its first letter.\n`;
         prompt =
           `Do several things at once:\n` +
@@ -830,7 +830,7 @@ It is Impossible to Provide More than 292 Characters</div>
             setOutput(`<p class="error-msg">⚠️\nLanguage Not Registered</p>`, true);
             return;
           }
-          setOutput(`<p class="result-main">${result}</p><p class="result-caption">🔎 ${caption || "Revealed"}</p>`);
+          setOutput(`<p class="result-main">${result}</p><p class="result-caption">🔎<br>${caption || "Revealed"}</p>`);
         }
         else if (!backThought && selectedLang) {
           const { sourceLang, result, ipa, caption, alreadyCaption } = await callGemini(text, targetLang, "translate", apiKey);
@@ -841,13 +841,13 @@ It is Impossible to Provide More than 292 Characters</div>
           
           const emoji = LANG_TO_EMOJI[sourceLang];
           if (sourceLang === targetLang) {
-            setOutput(`<p class="result-muted">${emoji} ${alreadyCaption || `Already in ${sourceLang}.`}</p>`);
+            setOutput(`<p class="result-muted">${emoji}<br>${alreadyCaption || `Already in ${sourceLang}.`}</p>`);
           } else {
             let htmlResult = createRowHTML("result-main", emoji, result || "Translation error");
             if (ipa && ipa.toUpperCase() !== "N/A" && ipa.trim() !== "") {
               htmlResult += createRowHTML("result-ipa", "🌐", ipa);
             }
-            htmlResult += `<p class="result-caption">${selectedLang} ${caption || `Translated in ${targetLang}`}</p>`;
+            htmlResult += `<p class="result-caption">${selectedLang}<br>${caption || `Translated in ${targetLang}`}</p>`;
             setOutput(htmlResult);
           }
         }
@@ -860,13 +860,13 @@ It is Impossible to Provide More than 292 Characters</div>
           
           const emoji = LANG_TO_EMOJI[sourceLang];
           if (sourceLang === targetLang) {
-            setOutput(`<p class="result-muted">${emoji} ${alreadyCaption || `Already in ${sourceLang}.`}</p><p class="result-truth">${truthText}</p>`);
+            setOutput(`<p class="result-muted">${emoji}<br>${alreadyCaption || `Already in ${sourceLang}.`}</p><p class="result-truth">${truthText}</p>`);
           } else {
             let htmlResult = createRowHTML("result-main", emoji, truthText || "Error processing truth");
             if (ipa && ipa.toUpperCase() !== "N/A" && ipa.trim() !== "") {
               htmlResult += createRowHTML("result-ipa", "🌐", ipa);
             }
-            htmlResult += `<p class="result-caption">🔎 ${selectedLang} ${caption || `Revealed and Translated in ${targetLang}`}</p>`;
+            htmlResult += `<p class="result-caption">🔎 ${selectedLang}<br>${caption || `Revealed and Translated in ${targetLang}`}</p>`;
             setOutput(htmlResult);
           }
         }
