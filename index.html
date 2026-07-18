@@ -832,4 +832,64 @@ It is Impossible to Provide More than 292 Characters</div>
       try {
         const targetLang = selectedLang ? LANG_EMOJIS[selectedLang] : null;
 
-        if (backThought &&
+        if (backThought && !selectedLang) {
+          const { sourceLang, result, caption } = await callGemini(text, null, "truth", apiKey);
+          if (!sourceLang) {
+            setOutput(`<p class="error-msg">⚠️\nLanguage Not Registered</p>`, true);
+            return;
+          }
+          setOutput(`<p class="result-main">${result}</p><p class="result-caption">🔎<br>${caption || "Revealed"}</p>`);
+        }
+        else if (!backThought && selectedLang) {
+          const { sourceLang, result, ipa, caption, alreadyCaption } = await callGemini(text, targetLang, "translate", apiKey);
+          if (!sourceLang) {
+            setOutput(`<p class="error-msg">⚠️\nLanguage Not Registered</p>`, true);
+            return;
+          }
+          
+          const emoji = LANG_TO_EMOJI[sourceLang];
+          if (sourceLang === targetLang) {
+            setOutput(`<p class="result-muted">${emoji}<br>${alreadyCaption || `Already in ${sourceLang}.`}</p>`);
+          } else {
+            let htmlResult = createRowHTML("result-main", emoji, result || "Translation error");
+            if (ipa && ipa.toUpperCase() !== "N/A" && ipa.trim() !== "") {
+              htmlResult += createRowHTML("result-ipa", "🌐", ipa);
+            }
+            htmlResult += `<p class="result-caption">${selectedLang}<br>${caption || `Translated in ${targetLang}`}</p>`;
+            setOutput(htmlResult);
+          }
+        }
+        else if (backThought && selectedLang) {
+          const { sourceLang, result: truthText, ipa = "", caption, alreadyCaption } = await callGemini(text, targetLang, "truth", apiKey);
+          if (!sourceLang) {
+            setOutput(`<p class="error-msg">⚠️\nLanguage Not Registered</p>`, true);
+            return;
+          }
+          
+          const emoji = LANG_TO_EMOJI[sourceLang];
+          if (sourceLang === targetLang) {
+            setOutput(`<p class="result-muted">${emoji}<br>${alreadyCaption || `Already in ${sourceLang}.`}</p><p class="result-truth">${truthText}</p>`);
+          } else {
+            let htmlResult = createRowHTML("result-main", emoji, truthText || "Error processing truth");
+            if (ipa && ipa.toUpperCase() !== "N/A" && ipa.trim() !== "") {
+              htmlResult += createRowHTML("result-ipa", "🌐", ipa);
+            }
+            htmlResult += `<p class="result-caption">🔎 ${selectedLang}<br>${caption || `Revealed and Translated in ${targetLang}`}</p>`;
+            setOutput(htmlResult);
+          }
+        }
+      } catch (e) {
+        if (e.message === "QUOTA_ERROR") {
+          setOutput(`<p class="error-msg">⚠️\nPlease,\nYour Plan Limit has been Reached</p>`, true);
+        } else if (e.message === "API_KEY_ERROR") {
+          setOutput(`<p class="error-msg">⚠️\nPlease,\nCheck your GEMINI API KEY</p>`, true);
+        } else {
+          setOutput(`<p class="error-msg">⚠️\nPlease,\nTry Again</p>`, true);
+        }
+      } finally {
+        setButtonsState(false);
+      }
+    }
+  </script>
+</body>
+</html>
